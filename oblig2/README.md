@@ -5,9 +5,9 @@ In assignment 2, we will explore the following:
 - Part 2: Geometric optics ([geometric.py](./geometric.py))
 
 ## Details
-Opened: 23.01.2025
+Opened: 23.01.2026
 
-Deadline:
+Deadline: 24.02.2026
 
 ## Demo - Particle systems (Part 1)
 The task description is explained in [particles.py](./particles.py). The simulation may look as follow:
