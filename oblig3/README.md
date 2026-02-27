@@ -17,6 +17,7 @@ In this task, we will create a particle system in 3D space. In it, a particle is
 
 ### Specifications
   - Window size: 1280x720.
+    - If you use MacOS and have a Retina screen, setting this may lead to unexpected results. In this case, do not set the window size. The operating system will do this for you.
   - Particles spawn with a random size. You are free to choose a reasonable size.
   - All particles spawn from the same Cartesian coordinate (it's okay to move the spawning point with keyboard or mouse inputs during runtime).
   - Particles spawn with colors of your choice. Once an invididual particle's color is set, it must persist throughout its lifetime.

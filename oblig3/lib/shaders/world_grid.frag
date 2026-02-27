@@ -1,4 +1,4 @@
-#version 430 core
+#version 410 core
 
 /**
  * Shader for rendering an infinite world grid.

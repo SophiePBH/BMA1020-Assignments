@@ -1,4 +1,4 @@
-#version 430 core
+#version 410 core
 
 /**
  * Shader for rendering an infinite world grid.
@@ -15,8 +15,8 @@
 
 layout(location = 0) in vec3 position;
 
-layout(location = 1) out vec3 nearPoint;
-layout(location = 2) out vec3 farPoint;
+out vec3 nearPoint;
+out vec3 farPoint;
 
 out mat4 fragProj;
 out mat4 fragView;
