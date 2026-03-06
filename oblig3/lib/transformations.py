@@ -52,24 +52,3 @@ def rotate_y(angle_radians):
         [0.0, 0.0, 1.0, 0.0],
         [0.0, 0.0, 0.0, 1.0],
     ], dtype=np.float64)
-
-
-def perspective(fov_y, aspect, near, far):
-    # Optional: Task 6
-    # This is a placement matrix. Adjust this according to the task.
-    return np.array([
-        [1.0, 0.0, 0.0, 0.0],
-        [0.0, 1.0, 0.0, 0.0],
-        [0.0, 0.0, 1.0, 0.0],
-        [0.0, 0.0, 0.0, 1.0],
-    ], dtype=np.float32)
-
-def look_at(eye: np.ndarray, centre: np.ndarray, up: np.ndarray):
-    # Optional: Task 7
-    # This is a placement matrix. Adjust this according to the task.
-    return np.array([
-        [1.0, 0.0, 0.0, 0.0],
-        [0.0, 1.0, 0.0, 0.0],
-        [0.0, 0.0, 1.0, 0.0],
-        [0.0, 0.0, 0.0, 1.0],
-    ], dtype=np.float32)

@@ -48,9 +48,7 @@ Task 2: Implement function `scale(...)` in [lib/transformations.py](./lib/transf
 
 Task 3: Implement rotation function(s). We have already provided `rotate_z(...)`, `rotate_y(...)` and `rotate_x(...)`, but you can a different function, e.g. using quaternions or rotating around an arbitrary axis.
 
-Task 4: In [lib/Camera.py](./lib/Camera.py), complete method `get_projection()`. This returns the camera's projection matrix.
-
-Task 5: In [lib/Camera.py](./lib/Camera.py), complete method `get_look_at()`. This returns a matrix that describes the camera's orientation, position and the up vector.
+Task 4: In [lib/Camera.py](./lib/Camera.py), complete method `get_look_at()`. This returns a matrix that describes the camera's orientation, position and the up vector.
 
 ### Optional Tasks
 World grids can be useful while working with 3D graphics to help navigating the world. It is optional to use the world grid and the template that the [world grid demo](./world_grid_demo.py) provides.
@@ -58,8 +56,6 @@ World grids can be useful while working with 3D graphics to help navigating the 
 To make the demo work, you need to complete the following tasks:
 - *Task 4*: [See above](#additional-library---tasks)
 - *Task 5*: [See above](#additional-library---tasks)
-- *Task 6*: In [lib/transformations.py](./lib/transformations.py), complete the `perspective(...)` method
-- *Task 7*: In [lib/transformations.py](./lib/transformations.py), complete the `look_at(...)` method
 
 ### Features
 The library is unique to our course and there exists no documentation online about it. Therefore, we will include some documentation about how to use some of its features.
