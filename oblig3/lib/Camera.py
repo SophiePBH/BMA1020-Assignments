@@ -2,7 +2,6 @@ import numpy as np
 from .transformations import *
 from pyglet.math import Mat4, Vec3
 import math
-from .transformations import perspective, look_at
 
 
 class Camera:
