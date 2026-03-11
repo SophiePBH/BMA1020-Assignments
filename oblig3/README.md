@@ -1,6 +1,6 @@
 # Assignment 3
 
-This assignment is a continuation of *assignment 3*, and we will take the simulations a step further into 3-dimensional space. Whilst the task descriptions are similar to the previous assignment, there are some changes. Please read them carefully to not miss important details.
+This assignment is a continuation of *assignment 2*, and we will take the simulations a step further into 3-dimensional space. Whilst the task descriptions are similar to the previous assignment, there are some changes. Please read them carefully to not miss important details.
 
 - [Part 1: Particle Systems](#part-1-particle-systems)
 - Part 2: TBA
