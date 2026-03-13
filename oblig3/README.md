@@ -1,9 +1,9 @@
 # Assignment 3
 
-This assignment is a continuation of *assignment 2*, and we will take the simulations a step further into 3-dimensional space. Whilst the task descriptions are similar to the previous assignment, there are some changes. Please read them carefully to not miss important details.
+This assignment is a continuation of *assignment 3*, and we will take the simulations a step further into 3-dimensional space. Whilst the task descriptions are similar to the previous assignment, there are some changes. Please read them carefully to not miss important details.
 
 - [Part 1: Particle Systems](#part-1-particle-systems)
-- Part 2: TBA
+- [Part 2: Geometric Optics](#part-2-geometric-optics) 
 - [Additional Library](#additional-library)
 
 ## Deadline
@@ -33,7 +33,24 @@ Additional requirements:
 We have provided an additional library for the camera and the shapes that extend Pyglet. More about this in [Additional Library](#additional-library).
 
 ### Part 2: Geometric Optics
-TBA
+In this task, we will simulate geometric optic in 3D space using ray tracing. You will model how light interacts with a lens through refraction and reflection, building on the camera and 3D rendering from Part 1. We will use Pyglet to visualise it.
+
+### Specification
+  - Window size: 1280x720.
+    - If you use MacOS and have a Retina screen, setting this may lead to unexpected results. In this case, do not set the window size. The operating system will do this for you.
+  - Implement a thick lens placed at the origin of the 3D world.
+    - The lens could be made by either Circle3D, or Line3D from lib.
+  - Given a ray origin and direction, find the nearest valid intersection with the lens surface.
+    - The ray should be made with Line3D from lib.
+    - The ray should be at a point source.
+  - When there is an intersection, the rays should either reflect or refract.
+    - Use Snell's Law to compute refraction. If total internal reflection occurs, reflect the ray instead.
+    - Refracted and reflected segments should have different colors.
+
+Bonus:
+  - Add or remove rays with arrow keys.
+  - Move around with the camera.
+    
 
 ## Additional Library
 [`lib`](./lib/) is our own internal library which extends Pyglet's capabilities. Even though Pyglet uses modern graphics technologies, it is implemented as a 2D library. `lib` extends Pyglet to support 3D. Whilst we have done most of the work, as part of the assignment you will contribute to a portion of the library [see here](#additional-library---tasks).
@@ -169,7 +186,80 @@ Arguments:
 See [world_grid_demo.py](./world_grid_demo.py) for a full demonstration.
 
 
-#### Feature 4: WorldGrid Shape
+#### Feature 4: Line3D Shape
+``` Python
+import lib
+import pyglet
+
+shader = lib.create3DShader()
+
+batch = pyglet.graphics.Batch()
+
+line = lib.shapes.Line3D(
+    x0=0, y0=0, z0=0,
+    x1=3, y1=2, z1=1,
+    thickness=0.1,
+    color=(80, 180, 230, 255),
+    batch=batch,
+    program=shader)
+
+line1 = lib.shapes.Line3D(
+    x0=2, y0=3, z0=0,
+    x1=3, y1=-4, z1=1,
+    thickness=0.2,
+    color=(255, 180, 230, 255),
+    batch=batch,
+    program=shader)
+
+```
+
+Arguments:
+| Name | Type | Description |
+|---|---|---|
+| x0 | `float` | x0-position in 3D space. |
+| y0 | `float` | y0-position in 3D space. |
+| z0 | `float` | z0-position in 3D space. |
+| x1 | `float` | x1-position in 3D space. |
+| y1 | `float` | y1-position in 3D space. |
+| z1 | `float` | z1-position in 3D space. |
+| thickness | `float` | Specifies the line's thickness |
+| color | `tuple` | Specifies the line's color. |
+| batch | `pyglet.graphics.Batch` | [Optional] Include the shape in a batch. It will then be draw together with any other shapes in the batch. |
+| program | `pyglet.graphics.Shader` | [Mandatory] Pass a reference to our custom shader. |
+
+
+#### Feature 5: Circle3D Shape
+```Python
+import lib
+import pyglet
+
+shader = lib.create3DShader()
+
+batch = pyglet.graphics.Batch()
+
+circle = lib.shapes.Circle3D(
+    x=0,
+    y=5,
+    z=0,
+    radius=20,
+    color=(255, 0, 0),
+    batch=batch,
+    program=shader)
+
+```
+Arguments:
+| Name | Type | Description |
+|---|---|---|
+| x | `float` | x-position in 3D space. |
+| y | `float` | y-position in 3D space. |
+| z | `float` | z-position in 3D space. |
+| radius | `float` | Specifies the circle's radius |
+| color | `tuple` | Specifies the circles's color. |
+| batch | `pyglet.graphics.Batch` | [Optional] Include the shape in a batch. It will then be draw together with any other shapes in the batch. |
+| program | `pyglet.graphics.Shader` | [Mandatory] Pass a reference to our custom shader. |
+
+
+#### Feature 6: WorldGrid Shape
 The `WorldGrid` shape inherits from a custom `Rectangle3D` shape. It creates an infinite world grid that helps navigating the 3D world. Internally, it creates its own special shader, so including the WorldGrid is simple.
 
 Example code:
@@ -198,7 +288,8 @@ def on_draw():
 
 See [world_grid_demo.py](./world_grid_demo.py) for a full demonstration.
 
-#### Feature 5: Widgets
+
+#### Feature 7: Widgets
 Pyglet does not provide widgets out-of-the-box. Although it supports labels, we must manually create our own widgets using primitive shapes like rectangles. Whilst widgets are not mandatory for the course, they can be useful to quickly testing or changing parameters, observing changes in real-time and debugging.
 
 > On Friday the 13th of March, there is a demo in-class about using widgets.
@@ -288,6 +379,7 @@ def on_mouse_drag(x: int, y: int, dx: int, dy: int, buttons: int, modifiers: int
 
 You can also move objects in 3d space with the slider, change the particle spawn rate, and more.
 
+
 ## Demo - Particle systems (Part 1)
 <video width="320" height="240" controls>
   <source src="./videos/particles.mp4" type="video/mp4">
@@ -295,3 +387,5 @@ You can also move objects in 3d space with the slider, change the particle spawn
 
 ## Submission
 TBA
+
+
