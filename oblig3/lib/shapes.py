@@ -5,6 +5,7 @@ from pyglet.gl import GL_BLEND, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_TRIANGL
 from typing import Sequence
 import numpy as np
 from .shaders import *
+import math
 
 import os
 
