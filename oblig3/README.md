@@ -10,7 +10,7 @@ This assignment is a continuation of *assignment 3*, and we will take the simula
 | Action | Time |
 |---|---|
 |Opened| 27.02.2026|
-|Deadline|17.03.2026|
+|Deadline|24.03.2026|
 
 ## Part 1: Particle Systems
 In this task, we will create a particle system in 3D space. In it, a particle is a point in Cartesian space with a set of properties. We will use Pyglet to visualise them, i.e. providing a shape to each particle.
