@@ -381,9 +381,7 @@ You can also move objects in 3d space with the slider, change the particle spawn
 
 
 ## Demo - Particle systems (Part 1)
-<video width="320" height="240" controls>
-  <source src="./videos/particles.mp4" type="video/mp4">
-</video>
+Please see [particles.mp4](./videos/particles.mp4).
 
 ## Submission
 The submission is divided in 2 parts on Moodle:
