@@ -386,6 +386,10 @@ You can also move objects in 3d space with the slider, change the particle spawn
 </video>
 
 ## Submission
-TBA
+The submission is divided in 2 parts on Moodle:
+- Assigment 3A
+- Assignment 3B
+
+For each of the these, please only submit the files that you have edited. If you have created a unique configuration, you may include a readme to describe the configuration steps.
 
 
