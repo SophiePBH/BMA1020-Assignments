@@ -49,6 +49,6 @@ def rotate_y(angle_radians):
     return np.array([
         [np.cos(angle_radians), 0.0, -np.sin(angle_radians), 0.0],
         [0.0, 1.0, 0.0, 0.0],
-        [np.sin(angle_radians), 1.0, np.cos(angle_radians), 0.0],
+        [np.sin(angle_radians), 0.0, np.cos(angle_radians), 0.0],
         [0.0, 0.0, 0.0, 1.0],
     ], dtype=np.float64)

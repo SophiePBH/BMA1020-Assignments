@@ -51,21 +51,7 @@ class Camera:
         # Task 4
         # This is a placement matrix. Adjust this according to the task.
 
-        rotate_x = np.array([
-            [1.0, 0.0, 0.0, 0.0],
-            [0.0, np.cos(self.phi), -np.sin(self.phi), 0.0],
-            [0.0, np.sin(self.phi), np.cos(self.phi), 0.0],
-            [0.0, 0.0, 0.0, 1.0],
-        ], dtype=np.float64)
-
-        rotate_y = np.array([
-            [np.cos(self.theta), 0.0, -np.sin(self.theta), 0.0],
-            [0.0, 1.0, 0.0, 0.0],
-            [np.sin(self.theta), 0.0, np.cos(self.theta), 0.0],
-            [0.0, 0.0, 0.0, 1.0],
-        ], dtype=np.float64)
-
-        rotate_xy = rotate_x @ rotate_y
+        rotate_xy = rotate_x(self.phi) @ rotate_y(self.theta)
 
         return Mat4(
             rotate_xy[0][0], rotate_xy[1][0], rotate_xy[2][0], 0.0,
