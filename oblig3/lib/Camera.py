@@ -51,8 +51,6 @@ class Camera:
         # Task 4
         # This is a placement matrix. Adjust this according to the task.
 
-        # View = Transform x Rotation
-
         rotate_x = np.array([
             [1.0, 0.0, 0.0, 0.0],
             [0.0, np.cos(self.phi), -np.sin(self.phi), 0.0],
@@ -75,26 +73,3 @@ class Camera:
             rotate_xy[0][2], rotate_xy[1][2], rotate_xy[2][2], 0.0,
             0.0,             0.0,             -self.distance,  1.0,
         )
-    
-        """ return Mat4(
-            # Column 1 
-            np.cos(self.theta), 
-            np.sin(self.phi) * np.sin(self.theta), 
-            -np.cos(self.phi) * np.sin(self.theta), 
-            0.0,
-            # Column 2
-            0.0,
-            np.cos(self.phi),
-            np.sin(self.phi),
-            0.0,
-            # Column 3
-            np.sin(self.phi),
-            -np.sin(self.phi) * np.cos(self.theta),
-            np.cos(self.phi) * np.cos(self.theta),
-            0.0,
-            # Column 4
-            0.0,
-            0.0,
-            -self.distance,
-            1.0,
-        ) """
