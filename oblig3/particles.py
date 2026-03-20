@@ -104,7 +104,7 @@ class Particle():
         self.G = [193, 154, 116, 77, 0]
         self.B = 0
 
-        # The sparticles shape
+        # The particles shape
         self.shape = lib.shapes.Prism3D(x=self.x, y=self.y, z=self.z,
                                          width=self.size, height=self.size, depth=self.size,
                                          color=(self.R, self.G[random.randint(0, 4)], self.B),
