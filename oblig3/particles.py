@@ -110,14 +110,11 @@ class Particle():
                                          batch=batch, program=shader)
         
     def move(self, dt):
-        # Change position of particle
-        # self.shape.x,
-        # self.shape.y,
-        # self.shape.z
+        # Calculate new position of particle
         new_position = dt * lib.transformations.translate(self.velocity[0],
                                                            self.velocity[1],
                                                            self.velocity[2])
-        # print(new_position)
+        # Change the particle's position
         self.shape.x += new_position[0][3]
         self.shape.y += new_position[1][3]
         self.shape.z += new_position[2][3]
