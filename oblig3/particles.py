@@ -71,7 +71,7 @@ camera.theta = np.pi / 4
 # Particles
 particle_batch = pyglet.graphics.Batch()
 particles = []
-
+gravity = -3
 
 # Input
 # -----
@@ -91,7 +91,7 @@ class Particle():
         self.phi = random.uniform(-np.pi, np.pi)
 
         # Speed and velocity
-        self.speed = random.randint(1, 2)
+        self.speed = random.randint(1, 3)
         self.velocity = np.array([self.speed * np.sin(self.phi) * np.cos(self.theta),
                                   self.speed * np.sin(self.phi) * np.sin(self.theta),
                                   self.speed * np.cos(self.phi)])
@@ -100,21 +100,25 @@ class Particle():
         self.size = random.uniform(0.1, 0.2)
 
         # Colour
-        self.R = random.randint(0, 255)
-        self.G = random.randint(0, 255)
-        self.B = random.randint(0, 255)
+        self.R = 255
+        self.G = [193, 154, 116, 77, 0]
+        self.B = 0
 
         # The sparticles shape
         self.shape = lib.shapes.Prism3D(x=self.x, y=self.y, z=self.z,
                                          width=self.size, height=self.size, depth=self.size,
-                                         color=(self.R, self.G, self.B),
+                                         color=(self.R, self.G[random.randint(0, 4)], self.B),
                                          batch=batch, program=shader)
         
     def move(self, dt):
+        # Calculate and add gravities effect
+        self.velocity[1] += dt * gravity
+
         # Calculate new position of particle
         new_position = dt * lib.transformations.translate(self.velocity[0],
                                                           self.velocity[1],
                                                           self.velocity[2])
+        
         # Change the particle's position
         self.shape.x += new_position[0][3]
         self.shape.y += new_position[1][3]
@@ -171,7 +175,7 @@ def particle_emitter(amount):
     particles = np.append(particles, [Particle(particle_batch, shader) for _ in range(amount)])
 
 def create_particles(dt):
-    particle_emitter(random.randint(5, 10))
+    particle_emitter(random.randint(15, 20))
 
 
 @window.event
