@@ -106,12 +106,12 @@ class Ray():
         self.vector = np.array([self.x1, self.y1, self.z1]) - lightsource
 
         # Thickness
-        self.thickness = 0.05
+        self.thickness = 0.02
 
         # Colour
-        self.R = 0
-        self.G = 255
-        self.B = 0
+        self.R = 252
+        self.G = 249
+        self.B = 217
 
         # Calculate intersection point and update end position of collision
         # is detected
@@ -124,7 +124,7 @@ class Ray():
         self.shape = lib.shapes.Line3D(x0=self.x0, y0=self.y0, z0=self.z0,
                                        x1=self.x1, y1=self.y1, z1=self.z1,
                                        thickness=self.thickness,
-                                       color=(self.R, self.G, self.B),
+                                       color=(self.R, self.G, self.B, 100),
                                        batch=rays_batch, program=shader)
 
 
@@ -166,7 +166,7 @@ def on_update(delta: float):
         camera.theta -= movement_step
 
 # Creates 100 rays
-rays = np.append(rays, [Ray() for _ in range(100)])
+rays = np.append(rays, [Ray() for _ in range(500)])
 
 @window.event
 def on_draw():
