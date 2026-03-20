@@ -1,3 +1,21 @@
+""" 
+    Window size: 1280x720.
+
+    Implement a thick lens placed at the origin of the 3D world.
+
+    The lens could be made by either Circle3D, or Line3D from lib.
+
+    Given a ray origin and direction, find the nearest valid intersection with the lens surface.
+
+    The ray should be made with Line3D from lib.
+    The ray should be at a point source.
+
+    When there is an intersection, the rays should either reflect or refract.
+    Use Snell's Law to compute refraction. If total internal reflection occurs, reflect the ray instead.
+    
+    Refracted and reflected segments should have different colors.
+"""
+
 import numpy as np
 import pyglet
 from pyglet.window import key
