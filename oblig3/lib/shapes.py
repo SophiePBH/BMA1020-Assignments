@@ -226,6 +226,7 @@ class Line3D(pyglet.shapes.ShapeBase):
             up = np.array([0, 1, 0], dtype=np.float32)
             x = direction
             z = np.cross(x, up)
+            z = np.array([0.001]*3) if np.linalg.norm(z) == 0 else z
             z /= np.linalg.norm(z)
             y = np.cross(z, x)
 
@@ -406,7 +407,7 @@ class Prism3D(pyglet.shapes.ShapeBase):
     @property
     def z(self) -> float:
         return self._z
-
+    
     @z.setter
     def z(self, value: float) -> None:
         self._z = value
