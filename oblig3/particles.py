@@ -1,23 +1,23 @@
 """ 
     Window size: 1280x720. ☑️
 
-    Particles spawn with a random size. You are free to choose a reasonable size.
+    Particles spawn with a random size. You are free to choose a reasonable size. ☑️
     
     All particles spawn from the same Cartesian coordinate (it's okay
-    to move the spawning point with keyboard or mouse inputs during runtime).
+    to move the spawning point with keyboard or mouse inputs during runtime). ☑️
     
     Particles spawn with colors of your choice.
     Once an invididual particle's color is set, it must
-    persist throughout its lifetime.
+    persist throughout its lifetime. ☑️
     
-    Particles spawn with a random velocity.
+    Particles spawn with a random velocity. ☑️
     
-    Particles are affected by gravitational force.
+    Particles are affected by gravitational force. ☑️
     
-    Particles spawn at a fixed rate.
+    Particles spawn at a fixed rate. ☑️
     
     There is a boundary box that particles can only live in.
-    Once a particle steps outside the boundary, it dies.
+    Once a particle steps outside the boundary, it dies. ☑️
 """
 
 import numpy as np
