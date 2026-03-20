@@ -10,7 +10,7 @@ This assignment is a continuation of *assignment 3*, and we will take the simula
 | Action | Time |
 |---|---|
 |Opened| 27.02.2026|
-|Deadline|17.03.2026|
+|Deadline|24.03.2026|
 
 ## Part 1: Particle Systems
 In this task, we will create a particle system in 3D space. In it, a particle is a point in Cartesian space with a set of properties. We will use Pyglet to visualise them, i.e. providing a shape to each particle.
@@ -381,11 +381,13 @@ You can also move objects in 3d space with the slider, change the particle spawn
 
 
 ## Demo - Particle systems (Part 1)
-<video width="320" height="240" controls>
-  <source src="./videos/particles.mp4" type="video/mp4">
-</video>
+Please see [particles.mp4](./videos/particles.mp4).
 
 ## Submission
-TBA
+The submission is divided in 2 parts on Moodle:
+- Assigment 3A
+- Assignment 3B
+
+For each of the these, please only submit the files that you have edited. If you have created a unique configuration, you may include a readme to describe the configuration steps.
 
 
