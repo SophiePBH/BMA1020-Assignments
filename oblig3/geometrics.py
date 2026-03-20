@@ -1,5 +1,5 @@
 """ 
-    Window size: 1280x720.
+    Window size: 1280x720. ☑️
 
     Implement a thick lens placed at the origin of the 3D world.
 
@@ -12,7 +12,7 @@
 
     When there is an intersection, the rays should either reflect or refract.
     Use Snell's Law to compute refraction. If total internal reflection occurs, reflect the ray instead.
-    
+
     Refracted and reflected segments should have different colors.
 """
 
@@ -48,19 +48,18 @@ camera = lib.Camera(width=window.width, height=window.height,
 
 # Objects
 # -------
-size = 3
-prism = lib.shapes.Prism3D(x=0, y=-size/2, z=0,
-                           width=size, height=size, depth=size,
-                           color=(190, 30, 160, 255),
-                           # You can add the prism to batch, also
-                           # batch=batch,
-                           program=shader)
+# Lens
+lens_batch = pyglet.graphics.Batch()
+# Lens isn't thick like the task wants it to be. IDK how to fix lol xD rofl
+lens = lib.shapes.Circle3D(x=0, y=3, z=-2,
+                           radius=3,
+                           color=(255,255,255),
+                           batch=lens_batch, program=shader)
 
 # Camera position with spherical coordinates
 camera.distance = 10
 camera.phi = np.pi/6
 camera.theta = np.pi / 4
-
 
 # Input
 # -----
@@ -92,12 +91,15 @@ def on_draw():
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
     shader["u_projection"] = camera.get_projection()
     shader["u_view"] = camera.get_look_at()
-    prism.draw()
+    # prism.draw()
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+    
     world_grid.shader["u_projection"] = camera.get_projection()
     world_grid.shader["u_view"] = camera.get_look_at()
     batch.draw()
+
+    lens_batch.draw()
 
 
 
