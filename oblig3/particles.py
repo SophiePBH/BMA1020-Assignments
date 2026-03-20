@@ -33,16 +33,18 @@ window = pyglet.window.Window()
 window.width = 1280
 window.height = 720
 
+# Sees what is closest to the camera
+glEnable(GL_DEPTH_TEST) 
+
 # Shaders
 # -----------------
 shader = lib.create3DShader()
 
 # Objects
 # -------
-batch = pyglet.graphics.Batch()
-
 # The world grid helps us navigating the 3d world space
-world_grid = lib.shapes.WorldGrid(batch)
+grid_batch = pyglet.graphics.Batch()
+world_grid = lib.shapes.WorldGrid(grid_batch)
 
 # Camera
 # ------
@@ -66,6 +68,10 @@ camera.distance = 10
 camera.phi = np.pi/6
 camera.theta = np.pi / 4
 
+# Particles
+particle_batch = pyglet.graphics.Batch()
+particles = []
+
 
 # Input
 # -----
@@ -77,10 +83,20 @@ class Particle():
     def __init__(self, batch, shader):
         # Position
         self.x = 0
-        self.y = 0
+        self.y = size/2
         self.z = 0
 
-        # Size/radius
+        # Angle
+        self.theta = random.uniform(-np.pi, np.pi)
+        self.phi = random.uniform(-np.pi, np.pi)
+
+        # Speed and velocity
+        self.speed = random.randint(1, 2)
+        self.velocity = np.array([self.speed * np.sin(self.phi) * np.cos(self.theta),
+                                  self.speed * np.sin(self.phi) * np.sin(self.theta),
+                                  self.speed * np.cos(self.phi)])
+
+        # Size for width, height and depth
         self.size = random.uniform(0.1, 0.2)
 
         # Colour
@@ -92,8 +108,25 @@ class Particle():
                                          width=self.size, height=self.size, depth=self.size,
                                          color=(self.R, self.G, self.B),
                                          batch=batch, program=shader)
+        
+    def move(self, dt):
+        # Change position of particle
+        # self.shape.x,
+        # self.shape.y,
+        # self.shape.z
+        new_position = dt * lib.transformations.translate(self.velocity[0],
+                                                           self.velocity[1],
+                                                           self.velocity[2])
+        # print(new_position)
+        self.shape.x += new_position[0][3]
+        self.shape.y += new_position[1][3]
+        self.shape.z += new_position[2][3]
 
-particle = Particle(batch, shader)
+
+# Start
+def start():
+    particle_emitter(10)
+
 
 def on_update(delta: float):
     global camera
@@ -110,6 +143,20 @@ def on_update(delta: float):
     if key_handler[key.A]:
         camera.theta -= movement_step
 
+    # Move particles
+    global particles
+    for particle in particles:
+        particle.move(delta)
+
+
+# Creating particles
+def particle_emitter(amount):
+    global particles
+    particles = np.append(particles, [Particle(particle_batch, shader) for _ in range(amount)])
+
+def create_particles(dt):
+    particle_emitter(random.randint(5, 10))
+
 
 @window.event
 def on_draw():
@@ -121,10 +168,16 @@ def on_draw():
     shader["u_view"] = camera.get_look_at()
     prism.draw()
 
+    # Particles
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+    particle_batch.draw()
+
+    # World grid
     world_grid.shader["u_projection"] = camera.get_projection()
     world_grid.shader["u_view"] = camera.get_look_at()
-    batch.draw()
+    grid_batch.draw()
+
+    
 
 
 
@@ -141,5 +194,7 @@ def on_mouse_scroll(x, y, scroll_x, scroll_y):
         camera.distance += scroll_speed
 
 
+start()
 pyglet.clock.schedule_interval(on_update, 1/60)
+pyglet.clock.schedule_interval(create_particles, 1)
 pyglet.app.run()
