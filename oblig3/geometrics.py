@@ -126,6 +126,13 @@ class Ray():
                                        thickness=self.thickness,
                                        color=(self.R, self.G, self.B, 100),
                                        batch=rays_batch, program=shader)
+        
+        # Calculate refraction and reflection
+    def Refract(self):
+        pass
+
+    def Reflect(self):
+        pass
 
 
 def Intersection(ray):
