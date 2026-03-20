@@ -220,6 +220,7 @@ class Line3D(pyglet.shapes.ShapeBase):
             p1 = np.array([self._x2, self._y2, self._z2], dtype=np.float32)
 
             length = np.linalg.norm(p1 - p0)
+            length = length if length > 0 else 0.01
             direction = (p1-p0) / length
 
             up = np.array([0, 1, 0], dtype=np.float32)
