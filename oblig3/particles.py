@@ -104,6 +104,7 @@ class Particle():
         self.G = random.randint(0, 255)
         self.B = random.randint(0, 255)
 
+        # The sparticles shape
         self.shape = lib.shapes.Prism3D(x=self.x, y=self.y, z=self.z,
                                          width=self.size, height=self.size, depth=self.size,
                                          color=(self.R, self.G, self.B),
@@ -112,12 +113,27 @@ class Particle():
     def move(self, dt):
         # Calculate new position of particle
         new_position = dt * lib.transformations.translate(self.velocity[0],
-                                                           self.velocity[1],
-                                                           self.velocity[2])
+                                                          self.velocity[1],
+                                                          self.velocity[2])
         # Change the particle's position
         self.shape.x += new_position[0][3]
         self.shape.y += new_position[1][3]
         self.shape.z += new_position[2][3]
+
+
+def collision_detector(particle):
+    # x-axis
+    if(particle.shape.x + particle.size/2 >= size/2
+       or particle.shape.x - particle.size/2 <= -size/2):
+        return True
+    # y-axis
+    if(particle.shape.y + particle.size >= size
+       or particle.shape.y <= 0):
+        return True
+    # z-axis
+    if(particle.shape.z + particle.size/2 >= size/2
+       or particle.shape.z - particle.size/2 <= -size/2):
+        return True
 
 
 # Start
@@ -140,10 +156,13 @@ def on_update(delta: float):
     if key_handler[key.A]:
         camera.theta -= movement_step
 
-    # Move particles
     global particles
     for particle in particles:
-        particle.move(delta)
+
+        if(collision_detector(particle)):
+            particles = np.delete(particles, np.where(particles == particle))
+        else:
+            particle.move(delta)
 
 
 # Creating particles
