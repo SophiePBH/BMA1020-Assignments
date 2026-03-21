@@ -142,16 +142,18 @@ def Intersection(ray):
     # TODO: adjust code so intersection is only detected within the lens and
     #       not the entire plane thingy
 
+    # Veeeery small positiv number for margin of error
     epsilon = 1e-6
 
-    # Whaddahelly is 'ndotu' 🙏😭
-    ndotu = lens_norm.dot(ray.vector)
-    if abs(ndotu) < epsilon:
+    # Scalar represents how much lens_norm and ray vector align
+    scalar = np.dot(lens_norm, ray.vector)
+    # If the scalar is basically 0, there is no intersection 
+    if abs(scalar) < epsilon:
         return None
     # What is 'w' 🙏😭
     w = lightsource - lens_position
     # What is 'si' 🙏😭
-    si = -lens_norm.dot(w) / ndotu
+    si = -lens_norm.dot(w) / scalar
     intersection_point = w + si * ray.vector + lens_position
     
     return intersection_point
@@ -172,8 +174,8 @@ def on_update(delta: float):
     if key_handler[key.A]:
         camera.theta -= movement_step
 
-# Creates 100 rays
-rays = np.append(rays, [Ray() for _ in range(500)])
+# Creates 1000 rays
+rays = np.append(rays, [Ray() for _ in range(1000)])
 
 @window.event
 def on_draw():
