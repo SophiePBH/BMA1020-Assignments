@@ -55,6 +55,7 @@ lens_batch = pyglet.graphics.Batch()
 
 # Lightsource and rays
 rays_batch = pyglet.graphics.Batch()
+reflected_batch = pyglet.graphics.Batch()
 lightsource = [0, 1.5, 2]
 rays = []
 
@@ -70,13 +71,13 @@ window.push_handlers(key_handler)
 
 
 class Lens():
-    def __init__(self):
+    def __init__(self, position):
         # Lens isn't thick like the task wants it to be. IDK how to fix lol xD rofl
-        self.position = np.array([0, 0, -10])
+        self.position = position
         # A vector on the lens
-        self.v1 = np.array([1, 2, -10]) - self.position
+        self.v1 = np.array([1, 2, position[2]]) - self.position
         # Another vector on the lens
-        self.v2 = np.array([-1, 1, -10]) - self.position
+        self.v2 = np.array([-1, 1, position[2]]) - self.position
         # Lens normal vector
         self.norm = np.cross(self.v1, self.v2)
         # Lens' centre
@@ -87,28 +88,31 @@ class Lens():
         self.lens = lib.shapes.Circle3D(x=self.position[0], y=self.position[1], z=self.position[2],
                                 radius=self.radius,
                                 segments=30,
-                                color=(255,255,255, 128),
+                                color=(255,255,255, 100),
                                 batch=lens_batch, program=shader)
 
 class Ray():
-    def __init__(self, lens):
+    def __init__(self, lens, start_pos, theta, phi, colour, batch):
+        # Rendering batch
+        self.batch = batch
+        
         # Start position
-        self.x0 = lightsource[0]
-        self.y0 = lightsource[1]
-        self.z0 = lightsource[2]
+        self.x0 = start_pos[0]
+        self.y0 = start_pos[1]
+        self.z0 = start_pos[2]
 
         # Length of ray
         self.length = 20
 
         # Angles
-        self.theta = random.uniform(-np.pi, np.pi)
-        self.phi = random.uniform(-np.pi, np.pi)
+        self.theta = theta
+        self.phi = phi
 
         # End position
-        # self.x1 = self.length * np.sin(self.phi) * np.cos(self.theta)
-        self.x1 = self.length * 0.2
-        # self.y1 = self.length * np.sin(self.phi) * np.sin(self.theta)
-        self.y1 = self.length * 0.1
+        self.x1 = self.length * np.sin(self.phi) * np.cos(self.theta)
+        # self.x1 = self.length * 0.2
+        self.y1 = self.length * np.sin(self.phi) * np.sin(self.theta)
+        # self.y1 = self.length * 0.1
         self.z1 = -self.length
 
         # Vector of line
@@ -118,20 +122,21 @@ class Ray():
         self.thickness = 0.02
 
         # Colour
-        self.R = 252
-        self.G = 249
-        self.B = 217
+        self.R = colour[0]
+        self.G = colour[1]
+        self.B = colour[2]
 
         # Calculate intersection point and update end position of collision
         # is detected
-        Intersection(self, lens)
+        self.intersection = Intersection(self, lens)
+        self.reflected_refracted = self.intersection
         
         # Ray shape
         self.shape = lib.shapes.Line3D(x0=self.x0, y0=self.y0, z0=self.z0,
                                        x1=self.x1, y1=self.y1, z1=self.z1,
                                        thickness=self.thickness,
                                        color=(self.R, self.G, self.B, 100),
-                                       batch=rays_batch, program=shader)
+                                       batch=self.batch, program=shader)
         
 def Intersection(ray, lens):
     # Google what this stuff does. It works but idk why
@@ -162,15 +167,29 @@ def Intersection(ray, lens):
 
             ray.length = np.linalg.norm(lightsource-intersection_point)
 
-            Reflect(ray, intersection_point)
+            print("drawing new line")
+            reflected = Reflect(ray, lens, intersection_point)
+
+            return reflected
 
 
 def Refract(ray):
     pass
 
 
-def Reflect(ray, intersection):
+def Reflect(ray, lens, intersection):
+    # TODO: Not even CLOSE to working 💀 
     ray.normalized = ray.vector/ray.length
+    lens.normalized = lens.norm/np.linalg.norm(lens.norm)
+
+    angle = ray.normalized - 2*np.dot(ray.normalized, lens.normalized) * lens.normalized
+    end_pos = angle * ray.length + intersection
+    
+    reflected = np.append(rays, Ray(lens=lens2, start_pos=intersection,
+                               theta=end_pos[0], phi=end_pos[1],
+                               colour=(67,255,67), batch=reflected_batch))
+    
+    return reflected
     
 
 def on_update(delta: float):
@@ -188,10 +207,15 @@ def on_update(delta: float):
     if key_handler[key.A]:
         camera.theta -= movement_step
 
-lens = Lens()
+lens1 = Lens(position=np.array([0, 0, -10]))
+lens2 = Lens(position=np.array([0, 0, -11]))
 
 # Creates 250 rays
-rays = np.append(rays, [Ray(lens) for _ in range(1)])
+rays = np.append(rays, [Ray(lens=lens1, start_pos=lightsource,
+                            theta=random.uniform(-np.pi, np.pi),
+                            phi=random.uniform(-np.pi, np.pi),
+                            colour=(252,249,217), batch=rays_batch)
+                            for _ in range(5)])
 
 @window.event
 def on_draw():
@@ -210,6 +234,7 @@ def on_draw():
     batch.draw()
 
     rays_batch.draw()
+    reflected_batch.draw()
     lens_batch.draw()
 
 
