@@ -51,24 +51,7 @@ camera = lib.Camera(width=window.width, height=window.height,
 # -------
 # Lens
 lens_batch = pyglet.graphics.Batch()
-# Lens isn't thick like the task wants it to be. IDK how to fix lol xD rofl
-lens_position = np.array([0, 0, -10])
-# A vector on the lens
-lens_v1 = np.array([1, 2, -10]) - lens_position
-# Another vector on the lens
-lens_v2 = np.array([-1, 1, -10]) - lens_position
-# Lens normal vector
-lens_norm = np.cross(lens_v1, lens_v2)
-# Lens' centre
-lens_centre = np.array([lens_position[0], lens_position[1]/2, lens_position[2]])
-# Lens radius
-lens_radius = 5
 
-lens = lib.shapes.Circle3D(x=lens_position[0], y=lens_position[1], z=lens_position[2],
-                           radius=lens_radius,
-                           segments=30,
-                           color=(255,255,255, 128),
-                           batch=lens_batch, program=shader)
 
 # Lightsource and rays
 rays_batch = pyglet.graphics.Batch()
@@ -86,8 +69,29 @@ key_handler = key.KeyStateHandler()
 window.push_handlers(key_handler)
 
 
-class Ray():
+class Lens():
     def __init__(self):
+        # Lens isn't thick like the task wants it to be. IDK how to fix lol xD rofl
+        self.position = np.array([0, 0, -10])
+        # A vector on the lens
+        self.v1 = np.array([1, 2, -10]) - self.position
+        # Another vector on the lens
+        self.v2 = np.array([-1, 1, -10]) - self.position
+        # Lens normal vector
+        self.norm = np.cross(self.v1, self.v2)
+        # Lens' centre
+        self.centre = np.array([self.position[0], self.position[1]/2, self.position[2]])
+        # Lens radius
+        self.radius = 5
+
+        self.lens = lib.shapes.Circle3D(x=self.position[0], y=self.position[1], z=self.position[2],
+                                radius=self.radius,
+                                segments=30,
+                                color=(255,255,255, 128),
+                                batch=lens_batch, program=shader)
+
+class Ray():
+    def __init__(self, lens):
         # Start position
         self.x0 = lightsource[0]
         self.y0 = lightsource[1]
@@ -101,10 +105,10 @@ class Ray():
         self.phi = random.uniform(-np.pi, np.pi)
 
         # End position
-        self.x1 = self.length * np.sin(self.phi) * np.cos(self.theta)
-        # self.x1 = self.length * 0.2
-        self.y1 = self.length * np.sin(self.phi) * np.sin(self.theta)
-        # self.y1 = self.length * 0.1
+        # self.x1 = self.length * np.sin(self.phi) * np.cos(self.theta)
+        self.x1 = self.length * 0.2
+        # self.y1 = self.length * np.sin(self.phi) * np.sin(self.theta)
+        self.y1 = self.length * 0.1
         self.z1 = -self.length
 
         # Vector of line
@@ -120,7 +124,7 @@ class Ray():
 
         # Calculate intersection point and update end position of collision
         # is detected
-        Intersection(self)
+        Intersection(self, lens)
         
         # Ray shape
         self.shape = lib.shapes.Line3D(x0=self.x0, y0=self.y0, z0=self.z0,
@@ -129,42 +133,45 @@ class Ray():
                                        color=(self.R, self.G, self.B, 100),
                                        batch=rays_batch, program=shader)
         
-        # Calculate refraction and reflection
-    def Refract(self):
-        pass
-
-    def Reflect(self):
-        pass
-
-
-def Intersection(ray):
+def Intersection(ray, lens):
     # Google what this stuff does. It works but idk why
     # https://rosettacode.org/wiki/Find_the_intersection_of_a_line_with_a_plane
-
-    # TODO: adjust code so intersection is only detected within the lens and
-    #       not the entire plane thingy
 
     # Veeeery small positiv number for margin of error
     epsilon = 1e-6
 
     # Scalar represents how much lens_norm and ray vector align
-    scalar = np.dot(lens_norm, ray.vector)
-    # If the scalar is basically 0, there is no intersection 
+    scalar = np.dot(lens.norm, ray.vector)
+    # If the scalar is greater than 0, there is an intersection
     if np.abs(scalar) >= epsilon:
         # What is 'w' 🙏😭
-        w = lightsource - lens_position
+        w = lightsource - lens.position
         # What is 'si' 🙏😭
-        si = np.dot(-lens_norm, w) / scalar
-        intersection_point = w + si * ray.vector + lens_position
+        si = np.dot(-lens.norm, w) / scalar
+        intersection_point = w + si * ray.vector + lens.position
 
-        # Lengden på vector fra sentrum til intersection point er <= radius
-        on_plane = np.linalg.norm(lens_centre - intersection_point)
+        # Check if intersection is on the lens
+        on_plane = np.linalg.norm(lens.centre - intersection_point)
 
-        if(on_plane <= lens_radius):
-
+        # If intersection is within the the lens radius, create new end position
+        # for ray
+        if(on_plane <= lens.radius):
             ray.x1 = intersection_point[0]
             ray.y1 = intersection_point[1]
             ray.z1 = intersection_point[2]
+
+            ray.length = np.linalg.norm(lightsource-intersection_point)
+
+            Reflect(ray, intersection_point)
+
+
+def Refract(ray):
+    pass
+
+
+def Reflect(ray, intersection):
+    ray.normalized = ray.vector/ray.length
+    
 
 def on_update(delta: float):
     global camera
@@ -181,8 +188,10 @@ def on_update(delta: float):
     if key_handler[key.A]:
         camera.theta -= movement_step
 
+lens = Lens()
+
 # Creates 250 rays
-rays = np.append(rays, [Ray() for _ in range(100)])
+rays = np.append(rays, [Ray(lens) for _ in range(1)])
 
 @window.event
 def on_draw():
