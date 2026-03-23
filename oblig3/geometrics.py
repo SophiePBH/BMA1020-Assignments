@@ -92,10 +92,10 @@ class Lens():
                                 batch=lens_batch, program=shader)
 
 class Ray():
-    def __init__(self, lens, start_pos, theta, phi, colour, batch):
+    def __init__(self, start_pos, colour, batch, end_pos: tuple[float, float, float] | None = None, lens: Lens | None = None):
         # Rendering batch
         self.batch = batch
-        
+
         # Start position
         self.x0 = start_pos[0]
         self.y0 = start_pos[1]
@@ -105,15 +105,18 @@ class Ray():
         self.length = 20
 
         # Angles
-        self.theta = theta
-        self.phi = phi
+        self.theta = random.uniform(-np.pi, np.pi)
+        self.phi = random.uniform(-np.pi, np.pi)
 
         # End position
-        self.x1 = self.length * np.sin(self.phi) * np.cos(self.theta)
-        # self.x1 = self.length * 0.2
-        self.y1 = self.length * np.sin(self.phi) * np.sin(self.theta)
-        # self.y1 = self.length * 0.1
-        self.z1 = -self.length
+        if end_pos is None:
+            self.x1 = self.length * np.sin(self.phi) * np.cos(self.theta)
+            self.y1 = self.length * np.sin(self.phi) * np.sin(self.theta)
+            self.z1 = -self.length
+        else:
+            self.x1 = end_pos[0]
+            self.y1 = end_pos[1]
+            self.z1 = end_pos[2]
 
         # Vector of line
         self.vector = np.array([self.x1, self.y1, self.z1]) - lightsource
@@ -128,8 +131,9 @@ class Ray():
 
         # Calculate intersection point and update end position of collision
         # is detected
-        self.intersection = Intersection(self, lens)
-        self.reflected_refracted = self.intersection
+        if lens is not None:
+            self.intersection = Intersection(self, lens)
+            self.reflected_refracted = self.intersection
         
         # Ray shape
         self.shape = lib.shapes.Line3D(x0=self.x0, y0=self.y0, z0=self.z0,
@@ -149,11 +153,11 @@ def Intersection(ray, lens):
     scalar = np.dot(lens.norm, ray.vector)
     # If the scalar is greater than 0, there is an intersection
     if np.abs(scalar) >= epsilon:
-        # What is 'w' 🙏😭
+        # What is 'w' 🙏😭 (think it might be a point?)
         w = lightsource - lens.position
-        # What is 'si' 🙏😭
-        si = np.dot(-lens.norm, w) / scalar
-        intersection_point = w + si * ray.vector + lens.position
+        # t(?) lowkey not sure what it is tho
+        t = np.dot(-lens.norm, w) / scalar
+        intersection_point = w + t * ray.vector + lens.position
 
         # Check if intersection is on the lens
         on_plane = np.linalg.norm(lens.centre - intersection_point)
@@ -167,9 +171,7 @@ def Intersection(ray, lens):
 
             ray.length = np.linalg.norm(lightsource-intersection_point)
 
-            print("drawing new line")
             reflected = Reflect(ray, lens, intersection_point)
-
             return reflected
 
 
@@ -178,16 +180,15 @@ def Refract(ray):
 
 
 def Reflect(ray, lens, intersection):
-    # TODO: Not even CLOSE to working 💀 
-    ray.normalized = ray.vector/ray.length
-    lens.normalized = lens.norm/np.linalg.norm(lens.norm)
+    ray_norm = ray.vector/ray.length
+    normal_norm = lens.norm/np.linalg.norm(lens.norm)
 
-    angle = ray.normalized - 2*np.dot(ray.normalized, lens.normalized) * lens.normalized
-    end_pos = angle * ray.length + intersection
-    
-    reflected = np.append(rays, Ray(lens=lens2, start_pos=intersection,
-                               theta=end_pos[0], phi=end_pos[1],
-                               colour=(67,255,67), batch=reflected_batch))
+    reflected_light = ray_norm - 2 * (np.dot(ray_norm, normal_norm) * normal_norm)
+    end_pos = intersection + reflected_light * ray.length
+
+    reflected = Ray(start_pos=intersection,
+                    colour=(67,255,67), batch=reflected_batch,
+                    end_pos=end_pos)
     
     return reflected
     
@@ -211,11 +212,9 @@ lens1 = Lens(position=np.array([0, 0, -10]))
 lens2 = Lens(position=np.array([0, 0, -11]))
 
 # Creates 250 rays
-rays = np.append(rays, [Ray(lens=lens1, start_pos=lightsource,
-                            theta=random.uniform(-np.pi, np.pi),
-                            phi=random.uniform(-np.pi, np.pi),
-                            colour=(252,249,217), batch=rays_batch)
-                            for _ in range(5)])
+rays = np.append(rays, [Ray(start_pos=lightsource,
+                            colour=(252,249,217), batch=rays_batch, lens=lens1)
+                            for _ in range(250)])
 
 @window.event
 def on_draw():
