@@ -127,7 +127,7 @@ class Ray():
             self.z1 = end_pos[2]
 
         # Vector of line
-        self.vector = np.array([self.x1, self.y1, self.z1]) - lightsource
+        self.vector = np.array([self.x1, self.y1, self.z1]) - self.start_pos
 
         # Thickness
         self.thickness = 0.02
@@ -162,7 +162,7 @@ def Intersection(ray, lens):
     # If the scalar is greater than 0, there is an intersection
     if np.abs(scalar) >= epsilon:
         # What is 'w' 🙏😭 (think it might be a point?)
-        w = lightsource - lens.position 
+        w = ray.start_pos - lens.position 
         # t(?) lowkey not sure what it is tho
         t = np.dot(-lens.norm, w) / scalar
         intersection_point = w + t * ray.vector + lens.position
@@ -176,9 +176,8 @@ def Intersection(ray, lens):
             ray.x1 = intersection_point[0]
             ray.y1 = intersection_point[1]
             ray.z1 = intersection_point[2]
-            print(ray.n_1, ray.start_pos, intersection_point)
 
-            ray.length = np.linalg.norm(ray.start_pos-intersection_point)
+            ray.length = np.linalg.norm(ray.start_pos - intersection_point)
 
             Refract(ray, lens, intersection_point)
             reflected_ray = Reflect(ray, lens, intersection_point)
