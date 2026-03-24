@@ -1,11 +1,11 @@
 """ 
     Window size: 1280x720. ☑️
 
-    Implement a thick lens placed at the origin of the 3D world.
+    Implement a thick lens placed at the origin of the 3D world. 
 
     The lens could be made by either Circle3D, or Line3D from lib. ☑️
 
-    Given a ray origin and direction, find the nearest valid intersection with the lens surface.
+    Given a ray origin and direction, find the nearest valid intersection with the lens surface. ☑️
 
     The ray should be made with Line3D from lib.
     The ray should be at a point source.
@@ -56,6 +56,7 @@ lens_batch = pyglet.graphics.Batch()
 # Lightsource and rays
 rays_batch = pyglet.graphics.Batch()
 reflected_batch = pyglet.graphics.Batch()
+refracted_batch = pyglet.graphics.Batch()
 lightsource = [0, 1.5, 2]
 rays = []
 
@@ -92,9 +93,12 @@ class Lens():
                                 batch=lens_batch, program=shader)
 
 class Ray():
-    def __init__(self, start_pos, colour, batch, end_pos: tuple[float, float, float] | None = None, lens: Lens | None = None):
+    def __init__(self, start_pos, colour, batch, n_1, n_2, end_pos: tuple[float, float, float] | None = None, lens: Lens | None = None):
         # Rendering batch
         self.batch = batch
+
+        self.n_1 = n_1
+        self.n_2 = n_2
 
         # Start position
         self.x0 = start_pos[0]
@@ -154,7 +158,7 @@ def Intersection(ray, lens):
     # If the scalar is greater than 0, there is an intersection
     if np.abs(scalar) >= epsilon:
         # What is 'w' 🙏😭 (think it might be a point?)
-        w = lightsource - lens.position
+        w = lightsource - lens.position 
         # t(?) lowkey not sure what it is tho
         t = np.dot(-lens.norm, w) / scalar
         intersection_point = w + t * ray.vector + lens.position
@@ -171,12 +175,28 @@ def Intersection(ray, lens):
 
             ray.length = np.linalg.norm(lightsource-intersection_point)
 
-            reflected = Reflect(ray, lens, intersection_point)
-            return reflected
+            new_ray = Reflect(ray, lens, intersection_point)
+            new_ray = Refract(ray, lens, intersection_point)
+            return new_ray
 
 
-def Refract(ray):
-    pass
+def Refract(ray, lens, intersection):
+    ratio = ray.n_1/ray.n_2
+
+    scalar = np.dot(lens.norm, ray.vector)
+
+    end_pos = ratio * ray.vector + lens.norm * np.sqrt(1 - ratio**2 * (1 - (scalar**2))) * ratio * lens.norm * scalar
+    
+    if ray.n_1 is 1:
+        colour=(255,67,255)
+    elif ray.n_1 is 1.5:
+        colour=(255,255,67)
+
+    refracted = Ray(start_pos=intersection,
+                    colour=colour, batch=refracted_batch,
+                    end_pos=end_pos, n_1=ray.n_2, n_2=ray.n_1)
+        
+    return refracted
 
 
 def Reflect(ray, lens, intersection):
@@ -188,7 +208,7 @@ def Reflect(ray, lens, intersection):
 
     reflected = Ray(start_pos=intersection,
                     colour=(67,255,67), batch=reflected_batch,
-                    end_pos=end_pos)
+                    end_pos=end_pos, n_1=ray.n_1, n_2=ray.n_2)
     
     return reflected
     
@@ -213,7 +233,8 @@ lens2 = Lens(position=np.array([0, 0, -11]))
 
 # Creates 250 rays
 rays = np.append(rays, [Ray(start_pos=lightsource,
-                            colour=(252,249,217), batch=rays_batch, lens=lens1)
+                            colour=(252,249,217), batch=rays_batch,
+                            lens=lens1, n_1=1, n_2=1.5)
                             for _ in range(250)])
 
 @window.event
@@ -234,6 +255,7 @@ def on_draw():
 
     rays_batch.draw()
     reflected_batch.draw()
+    refracted_batch.draw()
     lens_batch.draw()
 
 
