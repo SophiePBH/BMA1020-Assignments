@@ -59,7 +59,8 @@ reflected_batch = pyglet.graphics.Batch()
 refracted_batch = pyglet.graphics.Batch()
 lightsource = [0, 0, 6]
 rays = []
-reflected_rays = []
+refracted_rays = []
+refracted_rays2 = []
 
 # Camera position with spherical coordinates
 camera.distance = 10
@@ -77,11 +78,12 @@ class Lens():
         # Lens isn't thick like the task wants it to be. IDK how to fix lol xD rofl
         self.position = position
         # A vector on the lens
-        self.v1 = np.array([1, 2, position[2]]) - self.position
+        self.v1 = np.array([position[0]+1, position[1]+2, position[2]]) - self.position
         # Another vector on the lens
-        self.v2 = np.array([-1, 1, position[2]]) - self.position
+        self.v2 = np.array([position[0]-1, position[1]+1, position[2]]) - self.position
         # Lens normal vector
-        self.norm = np.cross(self.v1, self.v2)
+        # self.norm = np.cross(self.v1, self.v2)
+        self.norm = np.array([0,0,1])
         # Lens' centre
         self.centre = np.array([self.position[0], self.position[1]/2, self.position[2]])
         # Lens radius
@@ -105,6 +107,7 @@ class Ray():
         self.x0 = start_pos[0]
         self.y0 = start_pos[1]
         self.z0 = start_pos[2]
+        self.start_pos = np.array([self.x0, self.y0, self.z0])
 
         # Length of ray
         self.length = 20
@@ -173,34 +176,42 @@ def Intersection(ray, lens):
             ray.x1 = intersection_point[0]
             ray.y1 = intersection_point[1]
             ray.z1 = intersection_point[2]
+            print(ray.n_1, ray.start_pos, intersection_point)
 
-            ray.length = np.linalg.norm(lightsource-intersection_point)
+            ray.length = np.linalg.norm(ray.start_pos-intersection_point)
 
-            reflected_ray = Reflect(ray, lens, intersection_point)
             Refract(ray, lens, intersection_point)
+            reflected_ray = Reflect(ray, lens, intersection_point)
             return reflected_ray
 
 
 def Refract(ray, lens, intersection):
-    ratio = ray.n_1/ray.n_2
-    print("ray n1", ray.n_1, "ray n2", ray.n_2)
-
     ray_norm = ray.vector/ray.length
     normal_norm = lens.norm/np.linalg.norm(lens.norm)
 
     scalar = np.dot(normal_norm, ray_norm)
+    if scalar < 0:
+        normal_norm *= -1
+
+    ratio = ray.n_1/ray.n_2
 
     end_pos = ratio * ray_norm + normal_norm * np.sqrt(1 - ratio**2 * (1 - (scalar**2))) * ratio * normal_norm * scalar
     
     if ray.n_1 is 1:
         colour=(255,67,255)
+        global refracted_rays
+        refracted_rays = np.append(refracted_rays, [Ray(start_pos=intersection,
+                                                        colour=colour, batch=refracted_batch,
+                                                        end_pos=end_pos, lens=lens2,
+                                                        n_1=ray.n_2, n_2=ray.n_1)])
+
     elif ray.n_1 is 1.5:
         colour=(255,255,67)
-
-    global reflected_rays
-    reflected_rays = np.append(reflected_rays, [Ray(start_pos=intersection,
-                                                    colour=colour, batch=refracted_batch,
-                                                    end_pos=end_pos, n_1=ray.n_2, n_2=ray.n_1)])
+        print("hello")
+        global refracted_rays2
+        refracted_rays2 = np.append(refracted_rays2, [Ray(start_pos=intersection,
+                                                        colour=colour, batch=refracted_batch,
+                                                        end_pos=end_pos, n_1=ray.n_2, n_2=ray.n_1)])
 
 
 def Reflect(ray, lens, intersection):
@@ -239,7 +250,7 @@ lens2 = Lens(position=np.array([0, 0, -1]))
 rays = np.append(rays, [Ray(start_pos=lightsource,
                             colour=(252,249,217), batch=rays_batch,
                             lens=lens1, n_1=1, n_2=1.5)
-                            for _ in range(250)])
+                            for _ in range(10)])
 
 @window.event
 def on_draw():
