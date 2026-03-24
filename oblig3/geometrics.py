@@ -82,8 +82,8 @@ class Lens():
         # Another vector on the lens
         self.v2 = np.array([position[0]-1, position[1]+1, position[2]]) - self.position
         # Lens normal vector
-        # self.norm = np.cross(self.v1, self.v2)
-        self.norm = np.array([0,0,1])
+        self.norm = np.cross(self.v1, self.v2)
+        # self.norm = np.array([0,0,1])
         # Lens' centre
         self.centre = np.array([self.position[0], self.position[1]/2, self.position[2]])
         # Lens radius
@@ -126,6 +126,8 @@ class Ray():
             self.y1 = end_pos[1]
             self.z1 = end_pos[2]
 
+        self.end_pos = np.array([self.x1, self.y1, self.z1])
+
         # Vector of line
         self.vector = np.array([self.x1, self.y1, self.z1]) - self.start_pos
 
@@ -142,6 +144,8 @@ class Ray():
         if lens is not None:
             self.intersection = Intersection(self, lens)
             self.reflected_refracted = self.intersection
+
+            
         
         # Ray shape
         self.shape = lib.shapes.Line3D(x0=self.x0, y0=self.y0, z0=self.z0,
@@ -185,27 +189,27 @@ def Intersection(ray, lens):
 
 
 def Refract(ray, lens, intersection):
-    ray_norm = ray.vector/ray.length
-    normal_norm = lens.norm/np.linalg.norm(lens.norm)
+    # ray_norm = ray.vector/ray.length
+    normal_norm = -lens.norm/np.linalg.norm(lens.norm)
 
-    scalar = np.dot(normal_norm, ray_norm)
+    scalar = np.dot(normal_norm, ray.end_pos)
     if scalar < 0:
         normal_norm *= -1
 
     ratio = ray.n_1/ray.n_2
 
-    end_pos = ratio * ray_norm + normal_norm * np.sqrt(1 - ratio**2 * (1 - (scalar**2))) * ratio * normal_norm * scalar
-    
     if ray.n_1 == 1:
         colour=(255,67,255)
+        end_pos = ratio * ray.end_pos + normal_norm * np.sqrt(1 - ratio**2 * (1 - (scalar**2))) - ratio * normal_norm * scalar
         global refracted_rays
         refracted_rays = np.append(refracted_rays, [Ray(start_pos=intersection,
                                                         colour=colour, batch=refracted_batch,
                                                         end_pos=end_pos, lens=lens2,
                                                         n_1=ray.n_2, n_2=ray.n_1)])
 
-    elif ray.n_1 == 1.5:
+    else:
         colour=(255,255,67)
+        end_pos = ratio * ray.end_pos + normal_norm * np.sqrt(1 - ratio**2 * (1 - (scalar**2))) - ratio * normal_norm * scalar
         global refracted_rays2
         refracted_rays2 = np.append(refracted_rays2, [Ray(start_pos=intersection,
                                                         colour=colour, batch=refracted_batch,
@@ -246,7 +250,7 @@ def on_update(delta: float):
         camera.theta -= movement_step
 
 lens1 = Lens(position=np.array([0, 0, 0]))
-lens2 = Lens(position=np.array([0, 0, -1]))
+lens2 = Lens(position=np.array([0, 0, -2]))
 
 # Creates 250 rays
 rays = np.append(rays, [Ray(start_pos=lightsource,
