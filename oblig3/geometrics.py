@@ -219,10 +219,14 @@ def Reflect(ray, lens, intersection):
     reflected_light = ray_norm - 2 * (np.dot(ray_norm, normal_norm) * normal_norm)
     end_pos = intersection + reflected_light * ray.length
 
-    reflected = Ray(start_pos=intersection,
-                    colour=(67,255,67), batch=reflected_batch,
-                    end_pos=end_pos, n_1=ray.n_1, n_2=ray.n_2)
-    
+    if ray.n_1 == 1:
+        reflected = Ray(start_pos=intersection,
+                        colour=(67,255,67), batch=reflected_batch,
+                        end_pos=end_pos, n_1=ray.n_1, n_2=ray.n_2)
+    else:
+        reflected = Ray(start_pos=intersection,
+                        colour=(67,67,255), batch=reflected_batch,
+                        end_pos=end_pos, n_1=ray.n_1, n_2=ray.n_2)
     return reflected
     
 
@@ -248,7 +252,7 @@ lens2 = Lens(position=np.array([0, 0, -1]))
 rays = np.append(rays, [Ray(start_pos=lightsource,
                             colour=(252,249,217), batch=rays_batch,
                             lens=lens1, n_1=1, n_2=1.5)
-                            for _ in range(10)])
+                            for _ in range(250)])
 
 @window.event
 def on_draw():
