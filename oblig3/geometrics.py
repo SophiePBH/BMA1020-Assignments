@@ -57,8 +57,9 @@ lens_batch = pyglet.graphics.Batch()
 rays_batch = pyglet.graphics.Batch()
 reflected_batch = pyglet.graphics.Batch()
 refracted_batch = pyglet.graphics.Batch()
-lightsource = [0, 1.5, 2]
+lightsource = [0, 0, 6]
 rays = []
+reflected_rays = []
 
 # Camera position with spherical coordinates
 camera.distance = 10
@@ -175,28 +176,31 @@ def Intersection(ray, lens):
 
             ray.length = np.linalg.norm(lightsource-intersection_point)
 
-            new_ray = Reflect(ray, lens, intersection_point)
-            new_ray = Refract(ray, lens, intersection_point)
-            return new_ray
+            reflected_ray = Reflect(ray, lens, intersection_point)
+            Refract(ray, lens, intersection_point)
+            return reflected_ray
 
 
 def Refract(ray, lens, intersection):
     ratio = ray.n_1/ray.n_2
+    print("ray n1", ray.n_1, "ray n2", ray.n_2)
 
-    scalar = np.dot(lens.norm, ray.vector)
+    ray_norm = ray.vector/ray.length
+    normal_norm = lens.norm/np.linalg.norm(lens.norm)
 
-    end_pos = ratio * ray.vector + lens.norm * np.sqrt(1 - ratio**2 * (1 - (scalar**2))) * ratio * lens.norm * scalar
+    scalar = np.dot(normal_norm, ray_norm)
+
+    end_pos = ratio * ray_norm + normal_norm * np.sqrt(1 - ratio**2 * (1 - (scalar**2))) * ratio * normal_norm * scalar
     
     if ray.n_1 is 1:
         colour=(255,67,255)
     elif ray.n_1 is 1.5:
         colour=(255,255,67)
 
-    refracted = Ray(start_pos=intersection,
-                    colour=colour, batch=refracted_batch,
-                    end_pos=end_pos, n_1=ray.n_2, n_2=ray.n_1)
-        
-    return refracted
+    global reflected_rays
+    reflected_rays = np.append(reflected_rays, [Ray(start_pos=intersection,
+                                                    colour=colour, batch=refracted_batch,
+                                                    end_pos=end_pos, n_1=ray.n_2, n_2=ray.n_1)])
 
 
 def Reflect(ray, lens, intersection):
@@ -228,8 +232,8 @@ def on_update(delta: float):
     if key_handler[key.A]:
         camera.theta -= movement_step
 
-lens1 = Lens(position=np.array([0, 0, -10]))
-lens2 = Lens(position=np.array([0, 0, -11]))
+lens1 = Lens(position=np.array([0, 0, 0]))
+lens2 = Lens(position=np.array([0, 0, -1]))
 
 # Creates 250 rays
 rays = np.append(rays, [Ray(start_pos=lightsource,
