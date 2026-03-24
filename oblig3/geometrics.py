@@ -196,7 +196,7 @@ def Refract(ray, lens, intersection):
 
     end_pos = ratio * ray_norm + normal_norm * np.sqrt(1 - ratio**2 * (1 - (scalar**2))) * ratio * normal_norm * scalar
     
-    if ray.n_1 is 1:
+    if ray.n_1 == 1:
         colour=(255,67,255)
         global refracted_rays
         refracted_rays = np.append(refracted_rays, [Ray(start_pos=intersection,
@@ -204,9 +204,8 @@ def Refract(ray, lens, intersection):
                                                         end_pos=end_pos, lens=lens2,
                                                         n_1=ray.n_2, n_2=ray.n_1)])
 
-    elif ray.n_1 is 1.5:
+    elif ray.n_1 == 1.5:
         colour=(255,255,67)
-        print("hello")
         global refracted_rays2
         refracted_rays2 = np.append(refracted_rays2, [Ray(start_pos=intersection,
                                                         colour=colour, batch=refracted_batch,
