@@ -1,4 +1,11 @@
 """
+
+
+MUST RUN PROGRAM THROUGH TERMINAL FOR SPACE SHIP TO LOAD PROPERLY!!!!!!!
+CD INTO \oblig4 AND RUN COMMAND python space_simulation.py
+
+
+
 In this program, we simulate the space. We introduce stars, a planet and a
 spaceship to the simulation.
 
@@ -41,6 +48,12 @@ glEnable(GL_DEPTH_TEST)
 batch = pyglet.graphics.Batch()
 spheres_batch = pyglet.graphics.Batch()
 
+sphere = lib.Sphere(x=-2, y=2, z=0, radius=1, color=(255,0,255,255), batch=spheres_batch)
+
+spaceship_model = lib.shapes.CustomModel(filepath="data/spaceship.obj",
+                                         x=0.0, y=0.0, z=0.0,
+                                         size=1)
+
 # The world grid helps us navigating the 3d world space
 world_grid = lib.shapes.WorldGrid(batch)
 
@@ -56,8 +69,6 @@ camera.x = 3
 camera.y = 2
 camera.z = 3
 
-sphere = lib.Sphere(x=-2, y=2, z=0, radius=1, color=(255,0,255,255), batch=spheres_batch)
-
 # Input
 # -----
 key_handler = key.KeyStateHandler()
@@ -69,7 +80,9 @@ def on_draw():
     window.projection = camera.get_projection()
     window.view = camera.get_look_at()
     
+    spaceship_model.draw()
     spheres_batch.draw()
+
     batch.draw()
 
 
@@ -77,7 +90,7 @@ def on_update(delta: float):
     global camera
 
     # TODO: Proper camera movement. Janky rn
-    movement_step = np.pi/2 * delta
+    movement_step = np.pi/2 * delta *3
 
     if key_handler[key.W]:
         camera.y += movement_step
