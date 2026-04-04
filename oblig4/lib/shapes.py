@@ -53,7 +53,7 @@ fragment_source = """#version 150 core
 """
 
 world_grid_vert = """
-#version 410 core
+#version 330 core
 
 /**
  * Shader for rendering an infinite world grid.
@@ -104,7 +104,7 @@ void main() {
 """
 
 world_grid_frag = """
-#version 410 core
+#version 330 core
 
 /**
  * Shader for rendering an infinite world grid.
@@ -358,6 +358,7 @@ class Rectangle3D(pyglet.shapes.ShapeBase):
             color: tuple[int, int, int, int] | tuple[int,
                                                      int, int] = (255, 255, 255, 255),
             batch: Batch | None = None,
+            program: ShaderProgram | None = None
     ):
         """Create a rectangle or square.
 
@@ -396,10 +397,11 @@ class Rectangle3D(pyglet.shapes.ShapeBase):
         r, g, b, *a = color
         self._rgba = r, g, b, a[0] if a else 255
 
-        self._program = pyglet.gl.current_context.create_program((vertex_source, 'vertex'),
-                                                                 (fragment_source, 'fragment'))
+        if program is None:
+            program = pyglet.gl.current_context.create_program((vertex_source, 'vertex'),
+                                                               (fragment_source, 'fragment'))
 
-        super().__init__(6, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, batch, None, self._program)
+        super().__init__(6, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, batch, None, program)
 
     def _create_vertex_list(self) -> None:
         self._vertex_list = self._program.vertex_list(
@@ -468,16 +470,14 @@ class Rectangle3D(pyglet.shapes.ShapeBase):
 
 class WorldGrid(Rectangle3D):
     def __init__(self, batch):
-        self.shader = pyglet.gl.current_context.create_program((world_grid_vert, 'vertex'),
-                                                               (world_grid_frag, 'fragment'))
+        shader = pyglet.gl.current_context.create_program((world_grid_vert, 'vertex'),
+                                                          (world_grid_frag, 'fragment'))
 
         super().__init__(x=-10, y=-10, z=0,
                          width=20, height=20,
                          color=(255, 255, 255, 255),
-                         blend_src=GL_SRC_ALPHA,
-                         blend_dest=GL_ONE_MINUS_SRC_ALPHA,
                          batch=batch,
-                         program=self.shader)
+                         program=shader)
 
 
 class Circle3D(pyglet.shapes.ShapeBase):
