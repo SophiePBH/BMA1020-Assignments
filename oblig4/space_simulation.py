@@ -27,7 +27,6 @@ import pyglet
 from pyglet.window import key
 import lib
 from pyglet.gl import *
-from pyglet.gl import glEnable, GL_DEPTH_TEST
 
 # Window properties
 # -----------------
@@ -52,31 +51,14 @@ camera = lib.Camera(width=window.width, height=window.height,
                     near=0.01, far=100.0)
 
 # Camera position with spherical coordinates
-camera.x = 0
-camera.y = 0
-camera.z = 0
+camera.x += 10
+camera.y += 10
+camera.z += 10
 
 # Input
 # -----
 key_handler = key.KeyStateHandler()
 window.push_handlers(key_handler)
-
-
-def on_update(delta: float):
-    global camera
-
-    # Move the camera
-    movement_step = np.pi/2 * delta
-
-    if key_handler[key.W]:
-        camera.phi += movement_step
-    if key_handler[key.S]:
-        camera.phi -= movement_step
-    if key_handler[key.D]:
-        camera.theta += movement_step
-    if key_handler[key.A]:
-        camera.theta -= movement_step
-
 
 @window.event
 def on_draw():
@@ -84,24 +66,9 @@ def on_draw():
     window.projection = camera.get_projection()
     window.view = camera.get_look_at()
 
-    world_grid.shader["u_projection"] = window.projection
-    world_grid.shader["u_view"] = window.view
-
-    world_grid.draw()
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+    batch.draw()
 
 
-@window.event
-def on_mouse_scroll(x, y, scroll_x, scroll_y):
-    global camera
-
-    min_distance = 1
-
-    if camera.distance <= min_distance and scroll_y == 1:
-        camera.distance = min_distance
-    else:
-        scroll_speed = -scroll_y
-        camera.distance += scroll_speed
-
-
-pyglet.clock.schedule_interval(on_update, 1/60)
+# pyglet.clock.schedule_interval(on_update, 1/60)
 pyglet.app.run()
