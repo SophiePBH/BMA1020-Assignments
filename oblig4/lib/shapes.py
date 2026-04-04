@@ -471,13 +471,15 @@ class WorldGrid(Rectangle3D):
         self.shader = pyglet.gl.current_context.create_program((world_grid_vert, 'vertex'),
                                                                (world_grid_frag, 'fragment'))
 
+        # TODO: Couldn't run space_simulations with blend_src, blend_dest, and program. Don't know why 🤷‍♀️
         super().__init__(x=-10, y=-10, z=0,
                          width=20, height=20,
                          color=(255, 255, 255, 255),
-                         blend_src=GL_SRC_ALPHA,
-                         blend_dest=GL_ONE_MINUS_SRC_ALPHA,
+                         # blend_src=GL_SRC_ALPHA,
+                         # blend_dest=GL_ONE_MINUS_SRC_ALPHA,
                          batch=batch,
-                         program=self.shader)
+                         # program=self.shader
+                         )
 
 
 class Circle3D(pyglet.shapes.ShapeBase):
