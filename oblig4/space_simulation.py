@@ -39,6 +39,7 @@ glEnable(GL_DEPTH_TEST)
 # Objects
 # -------
 batch = pyglet.graphics.Batch()
+spheres_batch = pyglet.graphics.Batch()
 
 # The world grid helps us navigating the 3d world space
 world_grid = lib.shapes.WorldGrid(batch)
@@ -51,9 +52,11 @@ camera = lib.Camera(width=window.width, height=window.height,
                     near=0.01, far=100.0)
 
 # Camera position with spherical coordinates
-camera.x += 10
-camera.y += 10
-camera.z += 10
+camera.x = 3
+camera.y = 2
+camera.z = 3
+
+sphere = lib.Sphere(x=-2, y=2, z=0, radius=1, color=(255,0,255,255), batch=spheres_batch)
 
 # Input
 # -----
@@ -65,10 +68,26 @@ def on_draw():
     window.clear()
     window.projection = camera.get_projection()
     window.view = camera.get_look_at()
-
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+    
+    spheres_batch.draw()
     batch.draw()
 
 
-# pyglet.clock.schedule_interval(on_update, 1/60)
+def on_update(delta: float):
+    global camera
+
+    # TODO: Proper camera movement. Janky rn
+    movement_step = np.pi/2 * delta
+
+    if key_handler[key.W]:
+        camera.y += movement_step
+    if key_handler[key.S]:
+        camera.y -= movement_step
+    if key_handler[key.D]:
+        camera.x += movement_step
+    if key_handler[key.A]:
+        camera.x -= movement_step
+
+
+pyglet.clock.schedule_interval(on_update, 1/60)
 pyglet.app.run()
