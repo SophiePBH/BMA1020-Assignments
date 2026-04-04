@@ -49,13 +49,12 @@ world_grid = lib.shapes.WorldGrid(batch)
 # We introduce the camera as a concept. It is our eyes into the 3d world.
 camera = lib.Camera(width=window.width, height=window.height,
                     fov=60,  # Measured in degrees
-                    near=0.01, far=1000.0)
+                    near=0.01, far=100.0)
 
 # Camera position with spherical coordinates
-camera.distance = 10
-camera.phi = np.pi/6
-camera.theta = np.pi / 4
-
+camera.x = 0
+camera.y = 0
+camera.z = 0
 
 # Input
 # -----
@@ -84,6 +83,11 @@ def on_draw():
     window.clear()
     window.projection = camera.get_projection()
     window.view = camera.get_look_at()
+
+    world_grid.shader["u_projection"] = window.projection
+    world_grid.shader["u_view"] = window.view
+
+    world_grid.draw()
 
 
 @window.event
