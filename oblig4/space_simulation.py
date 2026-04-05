@@ -131,9 +131,9 @@ camera = lib.Camera(width=WIDTH, height=HEIGHT,
                     near=0.01, far=100.0)
 
 # Camera position
-camera.x = 3
-camera.y = 2
-camera.z = 3
+camera.x = 8
+camera.y = 6
+camera.z = 8
 
 # Input
 # -----
@@ -167,7 +167,7 @@ class Particle():
                                   self.speed * np.sin(self.phi) * np.sin(self.theta),
                                   self.speed * np.cos(self.phi)])
 
-        # Size for width, height and depth
+        # Size of sphere
         self.radius = random.uniform(0.1, 0.3)
 
         # Colour
@@ -177,20 +177,19 @@ class Particle():
 
         # The particles shape
         self.shape = lib.Sphere(x=self.x, y=self.y, z=self.z,
-                                         radius=self.radius,
-                                         color=(self.R[random.randint(0, 4)],
-                                                self.G[random.randint(0, 4)],
-                                                self.B, 255),
-                                         batch=batch)
+                                radius=self.radius,
+                                color=(self.R[random.randint(0, 4)],
+                                    self.G[random.randint(0, 4)],
+                                    self.B, 255),
+                                batch=batch)
         
     def move(self, dt):
-        # Calculate and add gravities effect
-        # self.velocity[1] += dt * gravity
-
+        # Calculate and add gravitational effectS
         if(has_em_force):
             self.velocity += dt * electromagnetic_force(self.charge, self.velocity)
         if(has_gravity):
-            pass
+            # TODO: Think i need to implement collision to stop error?
+            self.velocity += dt * gravity(self, particles)
 
         # Calculate new position of particle
         new_position = dt * lib.transformations.translate(self.velocity[0],
@@ -207,13 +206,21 @@ def electromagnetic_force(q, v):
     # F = q * (E + v x B)
     # q = charge, E = electric field, v = velocity, B = magnetic field
     force = q * (electric_field + np.cross(v, magnetic_field))
+    
     return force
 
-def gravity(m_1, m_2, x_1, x_2):
+def gravity(self, particles):
     # F = (G * m_1 * m_2 * (x_1 - x_2)) / (|(x_1 - x_2)|**3)
     # G = gravitational constant, m_1 = mass 1, m_2 = mass 2,
     # x_1 = centre of sphere 1, x_2 = centre of sphere 2
-    force = (gravitational_constant * m_1 * m_2 * (x_1 - x_2)) / (np.linalg.solve(x_1 - x_2)**3)
+
+    for particle in particles:
+        if self is not particle:
+            x_1 = np.array([self.shape.x, self.shape.y, self.shape.z])
+            x_2 = np.array([particle.shape.x, particle.shape.y, particle.shape.z])
+            
+            force = (gravitational_constant * self.mass * particle.mass * (x_1 - x_2)) / (np.linalg.norm(x_1 - x_2)**3)
+
     return force
 
 # Creating particles
@@ -222,7 +229,7 @@ def particle_emitter(amount):
     particles = np.append(particles, [Particle(particles_batch, spawnpoint) for _ in range(amount)])
 
 def create_particles(dt):
-    particle_emitter(random.randint(15, 20))
+    particle_emitter(random.randint(2, 2))
 
 # TODO: maybe remove
 create_particles(3)
