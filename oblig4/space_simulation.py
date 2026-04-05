@@ -51,7 +51,8 @@ FPS = 60
 # Batches
 batch = pyglet.graphics.Batch()
 spheres_batch = pyglet.graphics.Batch()
-particle_batch = pyglet.graphics.Batch()
+particles_batch = pyglet.graphics.Batch()
+widgets_batch = pyglet.graphics.Batch()
 
 # Particles
 particles = []
@@ -65,6 +66,21 @@ spaceship_model = lib.shapes.CustomModel(filepath="data/spaceship.obj",
 
 # The world grid helps us navigating the 3d world space
 world_grid = lib.shapes.WorldGrid(batch)
+
+# Widgets
+# -------
+test = lib.widgets.Slider(x=100, y=100, width=200, height=10,
+                          knob_width=12, knob_height=12,
+                          color=(255,255,255,125), knob_color=(0,255,0,255),
+                          batch=widgets_batch, starting_value=0)
+
+font_size = 18
+font_type = 'Times New Roman'
+
+# You can add labels to batches.
+label = pyglet.text.Label("TEST", font_name=font_type, font_size=font_size,
+                          x=30.0, y=600, anchor_x='left', anchor_y='center', 
+                          batch=widgets_batch)
 
 # Camera
 # ------
@@ -171,7 +187,7 @@ def particle_emitter(amount):
     spawnpoint = [random.uniform(-2, 2), random.uniform(-2, 2), random.uniform(-2, 2)]
 
     global particles
-    particles = np.append(particles, [Particle(particle_batch, spawnpoint) for _ in range(amount)])
+    particles = np.append(particles, [Particle(particles_batch, spawnpoint) for _ in range(amount)])
 
 def create_particles(dt):
     particle_emitter(random.randint(15, 20))
@@ -185,7 +201,8 @@ def on_draw():
     
     # spaceship_model.draw()
 
-    particle_batch.draw()
+    widgets_batch.draw()
+    particles_batch.draw()
     batch.draw()
 
 
