@@ -69,17 +69,17 @@ world_grid = lib.shapes.WorldGrid(batch)
 
 # Widgets
 # -------
-test = lib.widgets.Slider(x=100, y=100, width=200, height=10,
+test = lib.widgets.Slider(x=0, y=100, width=200, height=10,
                           knob_width=12, knob_height=12,
                           color=(255,255,255,125), knob_color=(0,255,0,255),
-                          batch=widgets_batch, starting_value=0)
+                          batch=widgets_batch, starting_value=0.0)
 
 font_size = 18
 font_type = 'Times New Roman'
 
 # You can add labels to batches.
 label = pyglet.text.Label("TEST", font_name=font_type, font_size=font_size,
-                          x=30.0, y=600, anchor_x='left', anchor_y='center', 
+                          x=30.0, y=200, anchor_x='left', anchor_y='center', 
                           batch=widgets_batch)
 
 # Camera
@@ -172,6 +172,10 @@ def on_update(delta: float):
         camera.x += movement_step
     if key_handler[key.A]:
         camera.x -= movement_step
+    if key_handler[key.E]:
+        camera.z += movement_step
+    if key_handler[key.Q]:
+        camera.z -= movement_step
 
     global particles
     for particle in particles:
@@ -196,14 +200,20 @@ def create_particles(dt):
 @window.event
 def on_draw():
     window.clear()
+    widget_projection = window.projection
+    widget_view = window.view
+
     window.projection = camera.get_projection()
     window.view = camera.get_look_at()
     
     # spaceship_model.draw()
 
-    widgets_batch.draw()
     particles_batch.draw()
     batch.draw()
+
+    window.projection = widget_projection
+    window.view = widget_view
+    widgets_batch.draw()
 
 
 pyglet.clock.schedule_interval(on_update, 1/FPS)
