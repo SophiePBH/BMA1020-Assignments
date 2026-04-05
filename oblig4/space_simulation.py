@@ -39,12 +39,17 @@ import random
 # Window properties
 # -----------------
 window = pyglet.window.Window()
-window.width = 1280
-window.height = 720
+WIDTH = 1280
+HEIGHT = 720
+window.width = WIDTH
+window.height = HEIGHT
 
 glEnable(GL_DEPTH_TEST)
 
 FPS = 60
+
+# Coefficient of restitution
+e = 0.8
 
 # Objects
 # -------
@@ -69,23 +74,23 @@ world_grid = lib.shapes.WorldGrid(batch)
 
 # Widgets
 # -------
-test = lib.widgets.Slider(x=0, y=100, width=200, height=10,
-                          knob_width=12, knob_height=12,
-                          color=(255,255,255,125), knob_color=(0,255,0,255),
-                          batch=widgets_batch, starting_value=0.0)
+slider = lib.widgets.Slider(x=30, y=HEIGHT-100, width=200, height=10,
+                          knob_width=15, knob_height=15,
+                          color=(255,255,255,125), knob_color=(255,255,255,255),
+                          batch=widgets_batch, starting_value=0.8)
 
 font_size = 18
-font_type = 'Times New Roman'
+font_type = 'Arial'
 
 # You can add labels to batches.
-label = pyglet.text.Label("TEST", font_name=font_type, font_size=font_size,
-                          x=30.0, y=200, anchor_x='left', anchor_y='center', 
+label = pyglet.text.Label("e = 0.8", font_name=font_type, font_size=font_size,
+                          x=30.0, y=HEIGHT-50, anchor_x='left', anchor_y='center', 
                           batch=widgets_batch)
 
 # Camera
 # ------
 # We introduce the camera as a concept. It is our eyes into the 3d world.
-camera = lib.Camera(width=window.width, height=window.height,
+camera = lib.Camera(width=WIDTH, height=HEIGHT,
                     fov=60,  # Measured in degrees
                     near=0.01, far=100.0)
 
@@ -196,6 +201,14 @@ def particle_emitter(amount):
 def create_particles(dt):
     particle_emitter(random.randint(15, 20))
 
+
+@window.event
+def on_mouse_drag(x: int, y: int, dx: int, dy: int, buttons: int, modifiers: int):
+    if buttons & pyglet.window.mouse.LEFT:
+        slider.update_clicked(x, y)
+        label.text = "e = " + str(slider.value)
+        global e
+        e = slider.value
 
 @window.event
 def on_draw():
