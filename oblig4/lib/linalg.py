@@ -16,5 +16,4 @@ def lerp(a: float,
     The value between point a and b determined by t
     """
 
-    # TODO complete the implementation here
-    return 0.0
+    return a*(1-t)+b*t
