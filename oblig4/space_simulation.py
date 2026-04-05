@@ -56,6 +56,7 @@ particle_batch = pyglet.graphics.Batch()
 # Particles
 particles = []
 gravity = -3
+charge = [-1, 1]
 
 # Spaceship
 spaceship_model = lib.shapes.CustomModel(filepath="data/spaceship.obj",
@@ -93,8 +94,12 @@ class Particle():
         
         # Position
         self.x = spawnpoint[0]
-        self.y = spawnpoint[0]
-        self.z = spawnpoint[0]
+        self.y = spawnpoint[1]
+        self.z = spawnpoint[2]
+
+        # Mass and charge
+        self.mass = 1
+        self.charge = charge[random.randint(0, 1)]
 
         # Angle
         self.theta = random.uniform(-np.pi, np.pi)
@@ -110,14 +115,16 @@ class Particle():
         self.radius = random.uniform(0.1, 0.2)
 
         # Colour
-        self.R = 255
+        self.R = [193, 154, 116, 77, 0]
         self.G = [193, 154, 116, 77, 0]
-        self.B = 0
+        self.B = 255
 
         # The particles shape
         self.shape = lib.Sphere(x=self.x, y=self.y, z=self.z,
                                          radius=self.radius,
-                                         color=(self.R, self.G[random.randint(0, 4)], self.B, 255),
+                                         color=(self.R[random.randint(0, 4)],
+                                                self.G[random.randint(0, 4)],
+                                                self.B, 255),
                                          batch=batch)
         
     def move(self, dt):
