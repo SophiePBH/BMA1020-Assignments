@@ -19,7 +19,7 @@ color is set, it must persist throughout its lifetime. ☑️
 
 Particles spawn with a random velocity, radius, mass and charge. The charge can
 be taken to be either 1 or −1 at random, the others should take positive values
-within a range which gives visually satisfying results!
+within a range which gives visually satisfying results! ☑️ (Think this is done)
 
 Particles die after a certain amount of time, e.g. 3 seconds. ☑️
 
@@ -51,6 +51,10 @@ FPS = 60
 # Coefficient of restitution
 e = 0.8
 
+# Gravity
+electric_field = 10     # maybe change value?
+magnetic_field = 2      # maybe change value?
+
 # Objects
 # -------
 # Batches
@@ -63,6 +67,7 @@ widgets_batch = pyglet.graphics.Batch()
 particles = []
 gravity = -3
 charge = [-1, 1]
+spawnpoint = [0, 0, 0]
 
 # Spaceship
 spaceship_model = lib.shapes.CustomModel(filepath="data/spaceship.obj",
@@ -74,18 +79,46 @@ world_grid = lib.shapes.WorldGrid(batch)
 
 # Widgets
 # -------
-slider = lib.widgets.Slider(x=30, y=HEIGHT-100, width=200, height=10,
-                          knob_width=15, knob_height=15,
-                          color=(255,255,255,125), knob_color=(255,255,255,255),
-                          batch=widgets_batch, starting_value=0.8)
-
 font_size = 18
 font_type = 'Arial'
 
 # You can add labels to batches.
-label = pyglet.text.Label("e = 0.8", font_name=font_type, font_size=font_size,
+e_label = pyglet.text.Label("e = 0.8", font_name=font_type, font_size=font_size,
                           x=30.0, y=HEIGHT-50, anchor_x='left', anchor_y='center', 
                           batch=widgets_batch)
+
+e_slider = lib.widgets.Slider(x=30, y=HEIGHT-100, width=200, height=10,
+                          knob_width=15, knob_height=15,
+                          color=(255,255,255,125), knob_color=(255,255,255,255),
+                          batch=widgets_batch, starting_value=0.8)
+
+
+spawnX_label = pyglet.text.Label("Spawnpoint X: 0", font_name=font_type, font_size=font_size,
+                                 x=30.0, y=HEIGHT-150, anchor_x='left', anchor_y='center', 
+                                 batch=widgets_batch)
+
+spawnX_slider = lib.widgets.Slider(x=30, y=HEIGHT-200, width=200, height=10,
+                                  knob_width=15, knob_height=15,
+                                  color=(255,0,0,125), knob_color=(255,0,0,255),
+                                  batch=widgets_batch, starting_value=0.5)
+
+spawnY_label = pyglet.text.Label("Spawnpoint Y: 0", font_name=font_type, font_size=font_size,
+                                 x=30.0, y=HEIGHT-250, anchor_x='left', anchor_y='center', 
+                                 batch=widgets_batch)
+
+spawnY_slider = lib.widgets.Slider(x=30, y=HEIGHT-300, width=200, height=10,
+                                  knob_width=15, knob_height=15,
+                                  color=(0,255,0,125), knob_color=(0,255,0,255),
+                                  batch=widgets_batch, starting_value=0.5)
+
+spawnZ_label = pyglet.text.Label("Spawnpoint Z: 0", font_name=font_type, font_size=font_size,
+                                 x=30.0, y=HEIGHT-350, anchor_x='left', anchor_y='center', 
+                                 batch=widgets_batch)
+
+spawnZ_slider = lib.widgets.Slider(x=30, y=HEIGHT-400, width=200, height=10,
+                                  knob_width=15, knob_height=15,
+                                  color=(0,0,255,125), knob_color=(0,0,255,255),
+                                  batch=widgets_batch, starting_value=0.5)
 
 # Camera
 # ------
@@ -119,7 +152,7 @@ class Particle():
         self.z = spawnpoint[2]
 
         # Mass and charge
-        self.mass = 1
+        self.mass = random.uniform(0.1, 1)
         self.charge = charge[random.randint(0, 1)]
 
         # Angle
@@ -133,7 +166,7 @@ class Particle():
                                   self.speed * np.cos(self.phi)])
 
         # Size for width, height and depth
-        self.radius = random.uniform(0.1, 0.2)
+        self.radius = random.uniform(0.1, 0.3)
 
         # Colour
         self.R = [193, 154, 116, 77, 0]
@@ -193,22 +226,33 @@ def on_update(delta: float):
 
 # Creating particles
 def particle_emitter(amount):
-    spawnpoint = [random.uniform(-2, 2), random.uniform(-2, 2), random.uniform(-2, 2)]
-
     global particles
     particles = np.append(particles, [Particle(particles_batch, spawnpoint) for _ in range(amount)])
 
 def create_particles(dt):
-    particle_emitter(random.randint(15, 20))
+    particle_emitter(random.randint(1, 5))
 
 
 @window.event
 def on_mouse_drag(x: int, y: int, dx: int, dy: int, buttons: int, modifiers: int):
     if buttons & pyglet.window.mouse.LEFT:
-        slider.update_clicked(x, y)
-        label.text = "e = " + str(slider.value)
         global e
-        e = slider.value
+
+        e_slider.update_clicked(x, y)
+        e_label.text = "e = " + str(e_slider.value)
+        e = e_slider.value
+
+        spawnX_slider.update_clicked(x, y)
+        spawnX_label.text = "Spawnpoint X: "+ str(np.round(spawnX_slider.value * 10 - 5, decimals=2))
+        spawnpoint[0] = spawnX_slider.value * 10 - 5
+
+        spawnY_slider.update_clicked(x, y)
+        spawnY_label.text = "Spawnpoint Y: " + str(np.round(spawnY_slider.value * 10 - 5, decimals=2))
+        spawnpoint[1] = spawnY_slider.value * 10 - 5
+
+        spawnZ_slider.update_clicked(x, y)
+        spawnZ_label.text = "Spawnpoint Z: " + str(np.round(spawnZ_slider.value * 10 - 5, decimals=2))
+        spawnpoint[2] = spawnZ_slider.value * 10 - 5
 
 @window.event
 def on_draw():
