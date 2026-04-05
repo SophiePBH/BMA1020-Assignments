@@ -24,7 +24,8 @@ within a range which gives visually satisfying results! ☑️ (Think this is do
 Particles die after a certain amount of time, e.g. 3 seconds. ☑️
 
 Particles collide with each other with sphere-to-sphere collision.
-Allow the user to adjust the coefficient of restitution e, taking e=0.8 as a default.
+
+Allow the user to adjust the coefficient of restitution e, taking e=0.8 as a default. ☑️
 
 Particles are subject to mutual gravitational and electromagnetic forces.
 You should be able to toggle each force on/off with a keystroke.
@@ -48,12 +49,15 @@ glEnable(GL_DEPTH_TEST)
 
 FPS = 60
 
-# Coefficient of restitution
-e = 0.8
 
 # Gravity
-electric_field = 10     # maybe change value?
-magnetic_field = 2      # maybe change value?
+has_em_force = True
+has_gravity = True
+electric_field = np.array([0, -1, 0])
+magnetic_field = np.array([0, 1, 0])
+gravitational_constant = -10
+# Coefficient of restitution (COR)
+e = 0.8
 
 # Objects
 # -------
@@ -64,10 +68,9 @@ particles_batch = pyglet.graphics.Batch()
 widgets_batch = pyglet.graphics.Batch()
 
 # Particles
-particles = []
-gravity = -3
-charge = [-1, 1]
-spawnpoint = [0, 0, 0]
+particles = np.array([])
+charge = np.array([-1, 1])
+spawnpoint = np.array([0, 0, 0])
 
 # Spaceship
 spaceship_model = lib.shapes.CustomModel(filepath="data/spaceship.obj",
@@ -90,7 +93,7 @@ e_label = pyglet.text.Label("e = 0.8", font_name=font_type, font_size=font_size,
 e_slider = lib.widgets.Slider(x=30, y=HEIGHT-100, width=200, height=10,
                           knob_width=15, knob_height=15,
                           color=(255,255,255,125), knob_color=(255,255,255,255),
-                          batch=widgets_batch, starting_value=0.8)
+                          batch=widgets_batch, starting_value=e)
 
 
 spawnX_label = pyglet.text.Label("Spawnpoint X: 0", font_name=font_type, font_size=font_size,
@@ -137,7 +140,6 @@ camera.z = 3
 key_handler = key.KeyStateHandler()
 window.push_handlers(key_handler)
 
-
 class Particle():
     def __init__(self, batch, spawnpoint):
         # TODO: Add mass and charge
@@ -169,8 +171,8 @@ class Particle():
         self.radius = random.uniform(0.1, 0.3)
 
         # Colour
-        self.R = [193, 154, 116, 77, 0]
-        self.G = [193, 154, 116, 77, 0]
+        self.R = np.array([193, 154, 116, 77, 0])
+        self.G = np.array([193, 154, 116, 77, 0])
         self.B = 255
 
         # The particles shape
@@ -183,7 +185,12 @@ class Particle():
         
     def move(self, dt):
         # Calculate and add gravities effect
-        self.velocity[1] += dt * gravity
+        # self.velocity[1] += dt * gravity
+
+        if(has_em_force):
+            self.velocity += dt * electromagnetic_force(self.charge, self.velocity)
+        if(has_gravity):
+            pass
 
         # Calculate new position of particle
         new_position = dt * lib.transformations.translate(self.velocity[0],
@@ -196,12 +203,61 @@ class Particle():
         self.shape.z += new_position[2][3]
 
 
+def electromagnetic_force(q, v):
+    # F = q * (E + v x B)
+    # q = charge, E = electric field, v = velocity, B = magnetic field
+    force = q * (electric_field + np.cross(v, magnetic_field))
+    return force
+
+def gravity(m_1, m_2, x_1, x_2):
+    # F = (G * m_1 * m_2 * (x_1 - x_2)) / (|(x_1 - x_2)|**3)
+    # G = gravitational constant, m_1 = mass 1, m_2 = mass 2,
+    # x_1 = centre of sphere 1, x_2 = centre of sphere 2
+    force = (gravitational_constant * m_1 * m_2 * (x_1 - x_2)) / (np.linalg.solve(x_1 - x_2)**3)
+    return force
+
+# Creating particles
+def particle_emitter(amount):
+    global particles
+    particles = np.append(particles, [Particle(particles_batch, spawnpoint) for _ in range(amount)])
+
+def create_particles(dt):
+    particle_emitter(random.randint(15, 20))
+
+# TODO: maybe remove
+create_particles(3)
+
+@window.event
+def on_key_press(symbol, modifiers):
+    global has_em_force
+    global has_gravity
+
+    # Enable/Disable electromagnetic force and gravity
+    if symbol == key.O:
+        has_em_force = not has_em_force
+    elif symbol == key.P:
+        has_gravity = not has_gravity
+
+    # Quit program
+    elif symbol == key.ESCAPE:
+        window.close()
+
 def on_update(delta: float):
     global camera
+    global particles
+
+    # Move or kill particle
+    for particle in particles:
+        if(particle.lifetime <= 0):
+            particles = np.delete(particles, np.where(particles == particle))
+        else:
+            particle.move(delta)
+            particle.lifetime -= 1
 
     # TODO: Proper camera movement. Janky rn
     movement_step = np.pi/2 * delta *3
 
+    # I think the key_handler is being overridden by on_key_press() 🤔
     if key_handler[key.W]:
         camera.y += movement_step
     if key_handler[key.S]:
@@ -214,24 +270,6 @@ def on_update(delta: float):
         camera.z += movement_step
     if key_handler[key.Q]:
         camera.z -= movement_step
-
-    global particles
-    for particle in particles:
-        if(particle.lifetime <= 0):
-            particles = np.delete(particles, np.where(particles == particle))
-        else:
-            particle.move(delta)
-            particle.lifetime -= 1
-
-
-# Creating particles
-def particle_emitter(amount):
-    global particles
-    particles = np.append(particles, [Particle(particles_batch, spawnpoint) for _ in range(amount)])
-
-def create_particles(dt):
-    particle_emitter(random.randint(1, 5))
-
 
 @window.event
 def on_mouse_drag(x: int, y: int, dx: int, dy: int, buttons: int, modifiers: int):
@@ -272,7 +310,6 @@ def on_draw():
     window.view = widget_view
     widgets_batch.draw()
 
-
 pyglet.clock.schedule_interval(on_update, 1/FPS)
-pyglet.clock.schedule_interval(create_particles, 1)
+pyglet.clock.schedule_interval(create_particles, 3)
 pyglet.app.run()
