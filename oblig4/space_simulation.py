@@ -55,7 +55,7 @@ has_em_force = True
 has_gravity = True
 electric_field = np.array([0, -1, 0])
 magnetic_field = np.array([0, 1, 0])
-gravitational_constant = -10
+gravitational_constant = -250
 # Coefficient of restitution (COR)
 e = 0.8
 
@@ -106,7 +106,7 @@ spawnX_slider = lib.widgets.Slider(x=30, y=HEIGHT-200, width=200, height=10,
                                   batch=widgets_batch, starting_value=0.5)
 
 spawnY_label = pyglet.text.Label("Spawnpoint Y: 0", font_name=font_type, font_size=font_size,
-                                 x=30.0, y=HEIGHT-250, anchor_x='left', anchor_y='center', 
+                                 x=30, y=HEIGHT-250, anchor_x='left', anchor_y='center', 
                                  batch=widgets_batch)
 
 spawnY_slider = lib.widgets.Slider(x=30, y=HEIGHT-300, width=200, height=10,
@@ -115,13 +115,19 @@ spawnY_slider = lib.widgets.Slider(x=30, y=HEIGHT-300, width=200, height=10,
                                   batch=widgets_batch, starting_value=0.5)
 
 spawnZ_label = pyglet.text.Label("Spawnpoint Z: 0", font_name=font_type, font_size=font_size,
-                                 x=30.0, y=HEIGHT-350, anchor_x='left', anchor_y='center', 
+                                 x=30, y=HEIGHT-350, anchor_x='left', anchor_y='center', 
                                  batch=widgets_batch)
 
 spawnZ_slider = lib.widgets.Slider(x=30, y=HEIGHT-400, width=200, height=10,
                                   knob_width=15, knob_height=15,
                                   color=(0,0,255,125), knob_color=(0,0,255,255),
                                   batch=widgets_batch, starting_value=0.5)
+
+controls_label = pyglet.text.Label("Toggle electromagnetic force: 'O'\nToggle mutual gravitational force: 'P'",
+                                    font_name=font_type, font_size=font_size,
+                                    x=WIDTH-30, y=HEIGHT-50, anchor_x='right',
+                                    anchor_y='center', multiline=True, width=385,
+                                    batch=widgets_batch)
 
 # Camera
 # ------
@@ -189,7 +195,9 @@ class Particle():
             self.velocity += dt * electromagnetic_force(self.charge, self.velocity)
         if(has_gravity):
             # TODO: Think i need to implement collision to stop error?
+            print("Before change", self.velocity)
             self.velocity += dt * gravity(self, particles)
+            print("After change", self.velocity)
 
         # Calculate new position of particle
         new_position = dt * lib.transformations.translate(self.velocity[0],
@@ -229,7 +237,7 @@ def particle_emitter(amount):
     particles = np.append(particles, [Particle(particles_batch, spawnpoint) for _ in range(amount)])
 
 def create_particles(dt):
-    particle_emitter(random.randint(2, 2))
+    particle_emitter(random.randint(15, 20))
 
 # TODO: maybe remove
 create_particles(3)
