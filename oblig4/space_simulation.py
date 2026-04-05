@@ -19,7 +19,7 @@ color is set, it must persist throughout its lifetime. ☑️
 
 Particles spawn with a random velocity, radius, mass and charge. The charge can
 be taken to be either 1 or −1 at random, the others should take positive values
-within a range which gives visually satisfying results! ☑️ (Think this is done)
+within a range which gives visually satisfying results! ☑️
 
 Particles die after a certain amount of time, e.g. 3 seconds. ☑️
 
@@ -28,7 +28,7 @@ Particles collide with each other with sphere-to-sphere collision.
 Allow the user to adjust the coefficient of restitution e, taking e=0.8 as a default. ☑️
 
 Particles are subject to mutual gravitational and electromagnetic forces.
-You should be able to toggle each force on/off with a keystroke.
+You should be able to toggle each force on/off with a keystroke. ☑️
 """
 import numpy as np
 import pyglet
