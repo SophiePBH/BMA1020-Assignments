@@ -52,7 +52,7 @@ FPS = 60
 
 # Gravity
 has_em_force = True
-has_gravity = True
+has_gravity = False
 electric_field = np.array([0, -1, 0])
 magnetic_field = np.array([0, 1, 0])
 gravitational_constant = -250
@@ -123,10 +123,18 @@ spawnZ_slider = lib.widgets.Slider(x=30, y=HEIGHT-400, width=200, height=10,
                                   color=(0,0,255,125), knob_color=(0,0,255,255),
                                   batch=widgets_batch, starting_value=0.5)
 
-controls_label = pyglet.text.Label("Toggle electromagnetic force: 'O'\nToggle mutual gravitational force: 'P'",
+controls_label = pyglet.text.Label("Mutual gravitational force:\nElectromagnetic force:",
                                     font_name=font_type, font_size=font_size,
-                                    x=WIDTH-30, y=HEIGHT-50, anchor_x='right',
-                                    anchor_y='center', multiline=True, width=385,
+                                    x=WIDTH-60, y=HEIGHT-50, anchor_x='right',
+                                    anchor_y='center', multiline=True, width=325,
+                                    batch=widgets_batch)
+gravity_label = pyglet.text.Label("Off", font_name=font_type, font_size=font_size,
+                                    x=WIDTH-30, y=HEIGHT-37, anchor_x='right',
+                                    anchor_y='center', color=(255,0,0,255),
+                                    batch=widgets_batch)
+em_label = pyglet.text.Label("On", font_name=font_type, font_size=font_size,
+                                    x=WIDTH-30, y=HEIGHT-65, anchor_x='right',
+                                    anchor_y='center', color=(0,255,0,255),
                                     batch=widgets_batch)
 
 # Camera
@@ -221,7 +229,6 @@ def gravity(self, particles):
     # F = (G * m_1 * m_2 * (x_1 - x_2)) / (|(x_1 - x_2)|**3)
     # G = gravitational constant, m_1 = mass 1, m_2 = mass 2,
     # x_1 = centre of sphere 1, x_2 = centre of sphere 2
-
     for particle in particles:
         if self is not particle:
             x_1 = np.array([self.shape.x, self.shape.y, self.shape.z])
@@ -250,8 +257,20 @@ def on_key_press(symbol, modifiers):
     # Enable/Disable electromagnetic force and gravity
     if symbol == key.O:
         has_em_force = not has_em_force
+        if(has_em_force):
+            em_label.color = (0,255,0,255)
+            em_label.text = "On"
+        else:
+            em_label.color = (255,0,0,255)
+            em_label.text = "Off"
     elif symbol == key.P:
         has_gravity = not has_gravity
+        if(has_gravity):
+            gravity_label.color = (0,255,0,255)
+            gravity_label.text = "On"
+        else:
+            gravity_label.color = (255,0,0,255)
+            gravity_label.text = "Off"
 
     # Quit program
     elif symbol == key.ESCAPE:
