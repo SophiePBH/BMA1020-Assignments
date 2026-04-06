@@ -55,7 +55,7 @@ has_em_force = True
 has_gravity = False
 electric_field = np.array([-1, -1, 0])
 magnetic_field = np.array([0, 1, 1])
-gravitational_constant = -250
+gravitational_constant = -10
 # Coefficient of restitution (COR)
 e = 0.8
 
@@ -202,8 +202,7 @@ class Particle():
         if(has_em_force):
             self.velocity += dt * electromagnetic_force(self.charge, self.velocity)
         if(has_gravity and len(particles) > 1):
-            # TODO: Think i need to implement collision to stop error?
-            self.velocity += dt * gravity(self, particles)
+            gravity(self, particles, dt)
         
         # Calculate new position of particle
         new_position = dt * lib.transformations.translate(self.velocity[0],
@@ -223,17 +222,20 @@ def electromagnetic_force(q, v):
     
     return force
 
-def gravity(self, particles):
+def gravity(self, particles, dt):
     # F = (G * m_1 * m_2 * (x_1 - x_2)) / (|(x_1 - x_2)|**3)
     # G = gravitational constant, m_1 = mass 1, m_2 = mass 2,
     # x_1 = centre of sphere 1, x_2 = centre of sphere 2
+    epsilon = 1e-6
+    
     for particle in particles:
         if self is not particle:
             x_1 = np.array([self.shape.x, self.shape.y, self.shape.z])
             x_2 = np.array([particle.shape.x, particle.shape.y, particle.shape.z])
             
-            force = (gravitational_constant * self.mass * particle.mass * (x_1 - x_2)) / (np.linalg.norm(x_1 - x_2)**3)
-            return force
+            distance = np.linalg.norm(x_1 - x_2)
+            if(distance >= epsilon):
+                self.velocity += dt * (gravitational_constant * self.mass * particle.mass * (x_1 - x_2)) / (distance**3)
 
 def collision_detection(self, particles, dt):
     for particle in particles:
