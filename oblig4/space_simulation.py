@@ -201,12 +201,10 @@ class Particle():
         # Calculate and add gravitational effectS
         if(has_em_force):
             self.velocity += dt * electromagnetic_force(self.charge, self.velocity)
-        if(has_gravity):
+        if(has_gravity and len(particles) > 1):
             # TODO: Think i need to implement collision to stop error?
-            print("Before change", self.velocity)
             self.velocity += dt * gravity(self, particles)
-            print("After change", self.velocity)
-
+        
         # Calculate new position of particle
         new_position = dt * lib.transformations.translate(self.velocity[0],
                                                           self.velocity[1],
@@ -235,8 +233,22 @@ def gravity(self, particles):
             x_2 = np.array([particle.shape.x, particle.shape.y, particle.shape.z])
             
             force = (gravitational_constant * self.mass * particle.mass * (x_1 - x_2)) / (np.linalg.norm(x_1 - x_2)**3)
+            return force
 
-    return force
+def collision_detection(self, particles, dt):
+    for particle in particles:
+        if self is not particle:
+            x_1 = np.array([self.shape.x, self.shape.y, self.shape.z])
+            x_2 = np.array([particle.shape.x, particle.shape.y, particle.shape.z])
+
+            distance = np.linalg.norm(x_1 - x_2)
+            if(distance <= self.radius + particle.radius):
+                I = (self.mass * particle.mass) / (self.mass + particle.mass) * (1 + e) * (particle.velocity - self.velocity)
+                self.velocity += dt * I/self.mass
+                particle.velocity += dt * I/particle.mass
+                return True
+            else:
+                return False
 
 # Creating particles
 def particle_emitter(amount):
@@ -247,7 +259,7 @@ def create_particles(dt):
     particle_emitter(random.randint(15, 20))
 
 def start():
-    create_particles(3)
+    particle_emitter(15)
 
 @window.event
 def on_key_press(symbol, modifiers):
@@ -285,6 +297,7 @@ def on_update(delta: float):
         if(particle.lifetime <= 0):
             particles = np.delete(particles, np.where(particles == particle))
         else:
+            collision_detection(particle, particles, delta)
             particle.move(delta)
             particle.lifetime -= 1
 
