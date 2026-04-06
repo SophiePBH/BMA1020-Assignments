@@ -263,33 +263,6 @@ def create_particles(dt):
 def start():
     particle_emitter(15)
 
-@window.event
-def on_key_press(symbol, modifiers):
-    global has_em_force
-    global has_gravity
-
-    # Enable/Disable electromagnetic force and gravity
-    if symbol == key.O:
-        has_em_force = not has_em_force
-        if(has_em_force):
-            em_label.color = (0,255,0,255)
-            em_label.text = "On"
-        else:
-            em_label.color = (255,0,0,255)
-            em_label.text = "Off"
-    elif symbol == key.P:
-        has_gravity = not has_gravity
-        if(has_gravity):
-            gravity_label.color = (0,255,0,255)
-            gravity_label.text = "On"
-        else:
-            gravity_label.color = (255,0,0,255)
-            gravity_label.text = "Off"
-
-    # Quit program
-    elif symbol == key.ESCAPE:
-        window.close()
-
 def on_update(delta: float):
     global camera
     global particles
@@ -319,6 +292,36 @@ def on_update(delta: float):
         camera.z += movement_step
     if key_handler[key.Q]:
         camera.z -= movement_step
+
+def key_press(symbol, modifiers):
+    global has_em_force
+    global has_gravity
+
+    # Enable/Disable electromagnetic force and gravity
+    if symbol == key.O:
+        has_em_force = not has_em_force
+        if(has_em_force):
+            em_label.color = (0,255,0,255)
+            em_label.text = "On"
+        else:
+            em_label.color = (255,0,0,255)
+            em_label.text = "Off"
+    elif symbol == key.P:
+        has_gravity = not has_gravity
+        if(has_gravity):
+            gravity_label.color = (0,255,0,255)
+            gravity_label.text = "On"
+        else:
+            gravity_label.color = (255,0,0,255)
+            gravity_label.text = "Off"
+
+    # Quit program
+    elif symbol == key.ESCAPE:
+        window.close()
+
+# Use this instead of on_key_press and @window.event. @window.event causes problems
+# for some reason
+window.push_handlers(on_key_press=key_press)
 
 @window.event
 def on_mouse_drag(x: int, y: int, dx: int, dy: int, buttons: int, modifiers: int):
