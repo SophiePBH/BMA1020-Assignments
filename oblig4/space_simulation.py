@@ -53,8 +53,8 @@ FPS = 60
 # Gravity
 has_em_force = True
 has_gravity = False
-electric_field = np.array([0, -1, 0])
-magnetic_field = np.array([0, 1, 0])
+electric_field = np.array([-1, -1, 0])
+magnetic_field = np.array([0, 1, 1])
 gravitational_constant = -250
 # Coefficient of restitution (COR)
 e = 0.8
@@ -145,8 +145,8 @@ camera = lib.Camera(width=WIDTH, height=HEIGHT,
                     near=0.01, far=100.0)
 
 # Camera position
-camera.x = 8
-camera.y = 6
+camera.x = -8
+camera.y = 2
 camera.z = 8
 
 # Input
@@ -246,8 +246,8 @@ def particle_emitter(amount):
 def create_particles(dt):
     particle_emitter(random.randint(15, 20))
 
-# TODO: maybe remove
-create_particles(3)
+def start():
+    create_particles(3)
 
 @window.event
 def on_key_press(symbol, modifiers):
@@ -344,6 +344,7 @@ def on_draw():
     window.view = widget_view
     widgets_batch.draw()
 
+start()
 pyglet.clock.schedule_interval(on_update, 1/FPS)
 pyglet.clock.schedule_interval(create_particles, 3)
 pyglet.app.run()
