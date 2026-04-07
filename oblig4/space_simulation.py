@@ -23,7 +23,7 @@ within a range which gives visually satisfying results! ☑️
 
 Particles die after a certain amount of time, e.g. 3 seconds. ☑️
 
-Particles collide with each other with sphere-to-sphere collision.
+Particles collide with each other with sphere-to-sphere collision. ☑️
 
 Allow the user to adjust the coefficient of restitution e, taking e=0.8 as a default. ☑️
 
