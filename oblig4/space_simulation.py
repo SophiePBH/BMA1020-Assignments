@@ -79,11 +79,11 @@ charge = np.array([-1, 1])
 spawnpoint = np.array([0, 0, 0])
 
 # Spaceship
-spaceship_model = lib.shapes.CustomModel(x=11, y=-9, z=0,
+spaceship_model = lib.shapes.CustomModel(x=25, y=-10, z=0,
                                          scale=1.0)
 
 # Lightsource
-point_light = lib.shapes.Sphere(x=-7, y=7, z=0, radius=1,
+point_light = lib.shapes.Sphere(x=0, y=10, z=0, radius=2,
                                color=(255,255,255,255), batch=batch)
 
 # The world grid helps us navigating the 3d world space
@@ -154,8 +154,8 @@ camera = lib.Camera(width=WIDTH, height=HEIGHT,
                     near=0.01, far=100.0)
 
 # Camera position
-camera.x = 10.5
-camera.y = 0
+camera.x = 24.5
+camera.y = -1
 camera.z = 0
 
 # Input
