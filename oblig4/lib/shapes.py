@@ -5,177 +5,16 @@ from pyglet.graphics.shader import ShaderProgram
 import random
 from pyglet.gl import GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA
 from icosphere import icosphere
+from .model_importer import *
 import math
-from .model_importer import load_obj
+import numpy as np
 
+from .shaders import *
+from .states import bind_scene_block
 
-
-vertex_source = """#version 150 core
-    in vec3 position;
-    in vec3 translation;
-    in vec4 colors;
-
-    in float rotation;
-
-    out vec4 vertex_colors;
-
-    uniform WindowBlock
-    {
-        mat4 projection;
-        mat4 view;
-    } window;
-
-    uniform mat4 m_rotation = mat4(1.0);
-    mat4 m_translate = mat4(1.0);
-
-    void main()
-    {
-        m_translate[3][0] = translation.x;
-        m_translate[3][1] = translation.y;
-        m_translate[3][2] = translation.z;
-        gl_Position = window.projection * window.view * m_translate * m_rotation * vec4(position, 1.0);
-        vertex_colors = colors;
-    }
-"""
-
-fragment_source = """#version 150 core
-    in vec4 vertex_colors;
-    out vec4 final_color;
-
-    void main()
-    {
-        final_color = vertex_colors; //vec4(1.0, 1.0, 1.0, 1.0);
-        // No GL_ALPHA_TEST in core, use shader to discard.
-        if(final_color.a < 0.01){
-            discard;
-        }
-    }
-"""
-
-world_grid_vert = """
-#version 330 core
-
-/**
- * Shader for rendering an infinite world grid.
- *
- * @details The code is taken from Marie at:
- * <a href="http://asliceofrendering.com/scene%20helper/2020/01/05/InfiniteGrid/">
- * asliceofrendering.com
- * </a>
- * License: <a href="https://github.com/BugzTroll/bugztroll.github.io/blob/master/LICENSE">
- * MIT License </a>
- *
- * @details It has been adjusted to suit the needs for this project.
- */
-
-in vec3 position;
-
-out vec3 nearPoint;
-out vec3 farPoint;
-
-out mat4 fragProj;
-out mat4 fragView;
-
-uniform WindowBlock
-{
-    mat4 projection;
-    mat4 view;
-} window;
-
-/**
- * Unproject point from clip space to world space.
- */
-vec3 UnprojectPoint(float x, float y, float z, mat4 view, mat4 projection) {
-    mat4 viewInv = inverse(view);
-    mat4 projInv = inverse(projection);
-    vec4 unprojectedPoint =  viewInv * projInv * vec4(x, y, z, 1.0);
-    return unprojectedPoint.xyz / unprojectedPoint.w;
-}
-
-// normal vertice projection
-void main() {
-    fragProj = window.projection;
-    fragView = window.view;
-
-    nearPoint = UnprojectPoint(position.x, position.y, 0.0, fragView, fragProj).xyz; // unprojecting on the near plane
-    farPoint = UnprojectPoint(position.x, position.y, 1.0, fragView, fragProj).xyz; // unprojecting on the far plane
-    gl_Position = vec4(position, 1.0);
-}
-"""
-
-world_grid_frag = """
-#version 330 core
-
-/**
- * Shader for rendering an infinite world grid.
- *
- * @details The code is taken from Marie at:
- * <a href="http://asliceofrendering.com/scene%20helper/2020/01/05/InfiniteGrid/">
- * asliceofrendering.com
- * </a>
- * License: <a href="https://github.com/BugzTroll/bugztroll.github.io/blob/master/LICENSE">
- * MIT License </a>
- *
- * @details It has been adjusted to suit the needs for this project.
- */
-
-in vec3 nearPoint;
-in vec3 farPoint;
-out vec4 outColor;
-
-in mat4 fragView;
-in mat4 fragProj;
-
-// Near and far clip from camera frustum
-uniform float u_nearClip = 0.01;
-uniform float u_farClip = 100.0;
-
-uniform vec3 lineColor = vec3(0.1);
-uniform float tileScale = 10.0;
-
-uniform float axisWidth = 0.5;
-float aWidth = axisWidth / 2.0;
-
-vec4 grid(vec3 fragPos3D, float scale, bool drawAxis) {
-    vec2 coord = fragPos3D.xz * scale;
-    vec2 derivative = fwidth(coord);
-    vec2 grid = abs(fract(coord - 0.5) - 0.5) / derivative;
-    float line = min(grid.x, grid.y);
-    float minimumz = min(derivative.y, 1);
-    float minimumx = min(derivative.x, 1);
-    vec4 color = vec4(lineColor, 1.0 - min(line, 1.0));
-    // z axis
-    if(fragPos3D.x > -aWidth * minimumx && fragPos3D.x < aWidth * minimumx)
-    color.z = 1.0;
-    // x axis
-    if(fragPos3D.z > -aWidth * minimumz && fragPos3D.z < aWidth * minimumz)
-    color.x = 1.0;
-    return color;
-}
-float computeDepth(vec3 pos) {
-    vec4 clip_space_pos = fragProj * fragView * vec4(pos.xyz, 1.0);
-    return (clip_space_pos.z / clip_space_pos.w);
-}
-float computeLinearDepth(vec3 pos) {
-    vec4 clip_space_pos = fragProj * fragView * vec4(pos.xyz, 1.0);
-    float clip_space_depth = (clip_space_pos.z / clip_space_pos.w) * 2.0 - 1.0; // put back between -1 and 1
-    float linearDepth = (2.0 * u_nearClip * u_farClip) / (u_farClip + u_nearClip - clip_space_depth * (u_farClip - u_nearClip)); // get linear value between 0.01 and 100
-    return linearDepth / u_farClip; // normalize
-}
-void main() {
-    float t = -nearPoint.y / (farPoint.y - nearPoint.y);
-    vec3 fragPos3D = nearPoint + t * (farPoint - nearPoint);
-
-    gl_FragDepth = computeDepth(fragPos3D);
-
-    float linearDepth = computeLinearDepth(fragPos3D);
-    float fading = max(0, (0.5 - linearDepth));
-
-    outColor = (grid(fragPos3D, 1/tileScale, true) + grid(fragPos3D, 1, true))* float(t > 0); // adding multiple resolution for the grid
-    outColor.a *= fading;
-}
-
-"""
+shader = create3DShader()
+shader_with_lighting = create3DShader(enable_lighting=True)
+bind_scene_block(shader_with_lighting)
 
 
 class Sphere(pyglet.shapes.ShapeBase):
@@ -224,15 +63,11 @@ class Sphere(pyglet.shapes.ShapeBase):
         self._radius = radius
 
         subdivision_frequency = 6
-        # num_vertices = 12 + 10 * (4**subdivision_frequency - 1)
         vertices, indices = icosphere(subdivision_frequency)
         vertices *= self._radius
         num_vertices = vertices.shape[0]
         indices = indices.flatten().tolist()
         vertices = vertices.flatten().tolist()
-
-        self._program = pyglet.gl.current_context.create_program((vertex_source, 'vertex'),
-                                                                 (fragment_source, 'fragment'))
 
         self._verts = vertices
         self._indices = indices
@@ -242,7 +77,7 @@ class Sphere(pyglet.shapes.ShapeBase):
             pyglet.gl.GL_ONE_MINUS_SRC_ALPHA,
             batch,
             None,
-            self._program,
+            shader,
         )
 
     def _create_vertex_list(self) -> None:
@@ -277,45 +112,86 @@ class Sphere(pyglet.shapes.ShapeBase):
         self._update_translation()
 
 
-
 class CustomModel(pyglet.shapes.ShapeBase):
     def __init__(
         self,
-        filepath: str,
         x: float, y: float, z: float,
-        size: float,
+        scale: float = 1,
+        filepath: str = "data/spaceship.obj",
+        base_color: tuple[int, int, int, int] = (155, 155, 155, 255),
         batch: Batch | None = None,
     ):
-        """Import an OBJ model"""
+        """Import an OBJ model.
+
+        This model is affected by lighting. That means to make it work properly,
+        a GlobalState must be configured. Please read the README for more info.
+
+        Note: When setting the positions x, y and z, it is based on the origin
+        defined in the 3D software that the model was created in.
+
+        Note: Only Wavefront (OBJ) file format is suppported.
+
+        Arguments:
+        ----------
+        - x: The model's X position.
+        - y: The model's Y position.
+        - z: The model's Z positin.
+        - scale: Scale up the original size of the model.
+        - filepath: Set the filepath where the model is in.
+        - base_color: The diffuse colour that all of the model's surfaces will
+                      use. This makes the diffuse colour of the Phong model.
+        - batch: A Pyglet Batch to be associated with.
+        """
 
         self._x = x
         self._y = y
         self._z = z
+        self._base_color = base_color
 
-        self._program = pyglet.gl.current_context.create_program((vertex_source, 'vertex'),
-                                                                 (fragment_source, 'fragment'))
-        
-        vertices, indices = load_obj(filepath)
+        self._rotation_matrix = np.identity(4)
 
-        self._verts = vertices * size
+        positions, self._normals, indices = pywavefront_obj_loader(filepath)
+
+        self._verts = positions * scale
         self._indices = indices
 
         # Build vertex list structure (just like Rectangle)
         super().__init__(
-            len(vertices) // 3,
+            len(positions) // 3,
             pyglet.gl.GL_SRC_ALPHA,
             pyglet.gl.GL_ONE_MINUS_SRC_ALPHA,
             batch,
             None,
-            self._program,
+            shader_with_lighting,
         )
+
+    @property
+    def rotation_matrix(self) -> np.ndarray:
+        return self._rotation_matrix
+
+    @rotation_matrix.setter
+    def rotation_matrix(self, value: np.ndarray) -> None:
+        self._rotation_matrix = value
+
+    def upload_rotation_matrix(self):
+        """Must be called before drawing the model.
+
+        The method updates the shader's `m_rotation` uniform. This is more
+        memory efficient than setting vertex attributes, but requires refinement
+        to support uploading unique rotation matrices to multiple CustomModel
+        shapes.
+        """
+        global shader_with_lighting
+        shader_with_lighting["m_rotation"] = self._rotation_matrix.flatten()
 
     def _create_colours(self):
         c = []
         for i in range(self._num_verts):
-            # c.extend((150, 150, 150, 255))
-            c.extend((random.randint(0, 255), random.randint(
-                0, 255), random.randint(0, 255), 255))
+            c.extend(self._base_color)
+
+            # Use the following code to generate random colours instead.
+            # c.extend((random.randint(0, 255), random.randint(
+            #     0, 255), random.randint(0, 255), 255))
         return c
 
     def _create_vertex_list(self) -> None:
@@ -326,7 +202,8 @@ class CustomModel(pyglet.shapes.ShapeBase):
             position=('f', self._get_vertices()),
             # self._rgba * self._num_verts),
             colors=('Bn', self._create_colours()),
-            translation=('f', (self._x, self._y, self._z) * self._num_verts))
+            translation=('f', (self._x, self._y, self._z) * self._num_verts),
+            normal=('f', self._normals))
 
     def _get_vertices(self) -> Sequence[float]:
         if not self._visible:
@@ -336,9 +213,10 @@ class CustomModel(pyglet.shapes.ShapeBase):
 
     def _update_vertices(self):
         self._vertex_list.position[:] = self._get_vertices()
-        
+
     def _update_translation(self) -> None:
-        self._vertex_list.translation[:] = (self._x, self._y, self._z) * self._num_verts
+        self._vertex_list.translation[:] = (
+            self._x, self._y, self._z) * self._num_verts
 
     @property
     def z(self) -> float:
@@ -360,16 +238,15 @@ class Rectangle3D(pyglet.shapes.ShapeBase):
             batch: Batch | None = None,
             program: ShaderProgram | None = None
     ):
-        """Create a rectangle or square.
-
-        The rectangle's anchor point defaults to the ``(x, y)``
-        coordinates, which are at the bottom left.
+        """Create a rectangle or square. It is created in the XZ plane.
 
         Args:
             x:
                 The X coordinate of the rectangle.
             y:
                 The Y coordinate of the rectangle.
+            z:
+                The Z coordinate of the rectangle.
             width:
                 The width of the rectangle.
             height:
@@ -378,14 +255,8 @@ class Rectangle3D(pyglet.shapes.ShapeBase):
                 The RGB or RGBA color of the circle, specified as a
                 tuple of 3 or 4 ints in the range of 0-255. RGB colors
                 will be treated as having an opacity of 255.
-            blend_src:
-                OpenGL blend source mode; for example, ``GL_SRC_ALPHA``.
-            blend_dest:
-                OpenGL blend destination mode; for example, ``GL_ONE_MINUS_SRC_ALPHA``.
-            batch:
-                Optional batch to add the shape to.
-            group:
-                Optional parent group of the shape.
+            program:
+                Override the shader program. Usually, this must not be defined.
         """
         self._x = x
         self._y = y
@@ -398,10 +269,14 @@ class Rectangle3D(pyglet.shapes.ShapeBase):
         self._rgba = r, g, b, a[0] if a else 255
 
         if program is None:
-            program = pyglet.gl.current_context.create_program((vertex_source, 'vertex'),
-                                                               (fragment_source, 'fragment'))
+            program = shader
 
-        super().__init__(6, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, batch, None, program)
+        super().__init__(6,
+                         GL_SRC_ALPHA,
+                         GL_ONE_MINUS_SRC_ALPHA,
+                         batch,
+                         None,
+                         program)
 
     def _create_vertex_list(self) -> None:
         self._vertex_list = self._program.vertex_list(
@@ -470,8 +345,7 @@ class Rectangle3D(pyglet.shapes.ShapeBase):
 
 class WorldGrid(Rectangle3D):
     def __init__(self, batch):
-        shader = pyglet.gl.current_context.create_program((world_grid_vert, 'vertex'),
-                                                          (world_grid_frag, 'fragment'))
+        shader = createWorldGridShader()
 
         super().__init__(x=-10, y=-10, z=0,
                          width=20, height=20,
@@ -533,16 +407,13 @@ class Circle3D(pyglet.shapes.ShapeBase):
         r, g, b, *a = color
         self._rgba = r, g, b, a[0] if a else 255
 
-        self._program = pyglet.gl.current_context.create_program((vertex_source, 'vertex'),
-                                                                 (fragment_source, 'fragment'))
-
         super().__init__(
             self._segments * 3,
             GL_SRC_ALPHA,
             GL_ONE_MINUS_SRC_ALPHA,
             batch,
             None,
-            self._program,
+            shader,
         )
 
     def _create_vertex_list(self) -> None:
@@ -604,3 +475,260 @@ class Circle3D(pyglet.shapes.ShapeBase):
     def radius(self, value: float) -> None:
         self._radius = value
         self._update_vertices()
+
+
+class Line3D(pyglet.shapes.ShapeBase):
+    def __init__(
+            self,
+            x0: float, y0: float, z0: float,
+            x1: float, y1: float, z1: float,
+            thickness: float,
+            color: tuple[int, int, int, int] | tuple[int,
+                                                     int, int] = (255, 255, 255, 255),
+            batch: Batch | None = None
+    ):
+        """Create a rectangle or square.
+
+        The rectangle's anchor point defaults to the ``(x, y)``
+        coordinates, which are at the bottom left.
+
+        Args:
+            x:
+                The X coordinate of the rectangle.
+            y:
+                The Y coordinate of the rectangle.
+            width:
+                The width of the rectangle.
+            height:
+                The height of the rectangle.
+            color:
+                The RGB or RGBA color of the circle, specified as a
+                tuple of 3 or 4 ints in the range of 0-255. RGB colors
+                will be treated as having an opacity of 255.
+            batch:
+                Optional batch to add the shape to.
+        """
+        self._x1 = x0
+        self._y1 = y0
+        self._z1 = z0
+        self._x2 = x1
+        self._y2 = y1
+        self._z2 = z1
+        self._thickness = thickness
+
+        r, g, b, *a = color
+        self._rgba = r, g, b, a[0] if a else 255
+
+        if program is None:
+            program = shader
+        super().__init__(24,
+                         GL_SRC_ALPHA,
+                         GL_ONE_MINUS_SRC_ALPHA,
+                         batch,
+                         None,
+                         shader)
+
+    def _create_vertex_list(self) -> None:
+        self._vertex_list = self._program.vertex_list(
+            24, self._draw_mode, self._batch, self._group,
+            position=('f', self._get_vertices()),
+            colors=('Bn', self._rgba * self._num_verts),
+            translation=('f', (self._x, self._y, self._z) * self._num_verts))
+
+    def _get_vertices(self) -> Sequence[float]:
+        if not self._visible:
+            return (0.0, 0.0, 0.0) * self._num_verts
+        else:
+            t = self._thickness * 0.5
+
+            p0 = np.array([self._x1, self._y1, self._z1], dtype=np.float32)
+            p1 = np.array([self._x2, self._y2, self._z2], dtype=np.float32)
+
+            length = np.linalg.norm(p1 - p0)
+            length = length if length > 0 else 0.01
+            direction = (p1-p0) / length
+
+            up = np.array([0, 1, 0], dtype=np.float32)
+            x = direction
+            z = np.cross(x, up)
+            z = np.array([0.001]*3) if np.linalg.norm(z) == 0 else z
+            z /= np.linalg.norm(z)
+            y = np.cross(z, x)
+
+            R = np.column_stack((x, y, z))
+
+            local_vertices = np.array([
+                [0, -t,  t],
+                [length, -t,  t],
+                [length,  t,  t],
+                [0,  t,  t],
+                [0, -t, -t],
+                [length, -t, -t],
+                [length,  t, -t],
+                [0,  t, -t],
+            ], dtype=np.float32)
+
+            world_vertices = (R @ local_vertices.T).T + p0
+            v0, v1, v2, v3, v4, v5, v6, v7 = world_vertices
+
+            return (
+                *v0, *v1, *v2,  # Front
+                *v0, *v2, *v3,
+
+                *v4, *v5, *v6,  # Rear
+                *v4, *v6, *v7,
+
+                *v3, *v2, *v6,  # Top
+                *v3, *v6, *v7,
+
+                *v0, *v1, *v5,  # Bottom
+                *v0, *v5, *v4,
+            )
+
+    def _update_vertices(self) -> None:
+        self._vertex_list.position[:] = self._get_vertices()
+
+    def _update_translation(self) -> None:
+        """Overwrite this method to support 3d position"""
+        self._vertex_list.translation[:] = (
+            self._x, self._y, self._z) * self._num_verts
+
+    @property
+    def z(self) -> float:
+        return self._z
+
+    @z.setter
+    def z(self, value: float) -> None:
+        self._z = value
+        self._update_translation()
+
+
+class Prism3D(pyglet.shapes.ShapeBase):
+    def __init__(
+            self,
+            x: float, y: float, z: float,
+            width: float, height: float, depth: float,
+            color: tuple[int, int, int, int] | tuple[int,
+                                                     int, int] = (255, 255, 255, 255),
+            batch: Batch | None = None,
+    ):
+        """Create a rectangle or square.
+
+        The rectangle's anchor point defaults to the ``(x, y)``
+        coordinates, which are at the bottom left.
+
+        Args:
+            x:
+                The X coordinate of the rectangle.
+            y:
+                The Y coordinate of the rectangle.
+            width:
+                The width of the rectangle.
+            height:
+                The height of the rectangle.
+            color:
+                The RGB or RGBA color of the circle, specified as a
+                tuple of 3 or 4 ints in the range of 0-255. RGB colors
+                will be treated as having an opacity of 255.
+            batch:
+                Optional batch to add the shape to.
+        """
+        self._x = x
+        self._y = y
+        self._z = z
+        self._width = width
+        self._height = height
+        self._depth = depth
+        self._rotation = 0
+
+        r, g, b, *a = color
+        self._rgba = r, g, b, a[0] if a else 255
+
+        super().__init__(36,
+                         GL_SRC_ALPHA,
+                         GL_ONE_MINUS_SRC_ALPHA,
+                         batch,
+                         None,
+                         shader)
+
+    def _create_vertex_list(self) -> None:
+        self._vertex_list = self._program.vertex_list(
+            self._num_verts, self._draw_mode, self._batch, self._group,
+            position=('f', self._get_vertices()),
+            colors=('Bn', self._rgba * self._num_verts),
+            translation=('f', (self._x, self._y, self._z) * self._num_verts))
+
+    def _get_vertices(self) -> Sequence[float]:
+        # Centralise the rectangle
+        w = self._width/2
+        h = self._height/2
+        d = self._depth/2
+
+        v0 = (self._x - w, self.height - h, d)
+        v1 = (self._x + w, self.height - h, d)
+        v2 = (self._x + w, self.height + h, d)
+        v3 = (self._x - w, self.height + h, d)
+        v4 = (self._x - w, self.height - h, -d)
+        v5 = (self._x + w, self.height - h, -d)
+        v6 = (self._x + w, self.height + h, -d)
+        v7 = (self._x - w, self.height + h, -d)
+
+        return (
+            *v0, *v1, *v2,  # Front
+            *v0, *v2, *v3,  # Front
+            *v4, *v5, *v6,  # Rear
+            *v4, *v6, *v7,  # Rear
+            *v3, *v2, *v6,  # Top
+            *v3, *v6, *v7,  # Top
+            *v0, *v1, *v5,  # Bottom
+            *v0, *v5, *v4,  # Bottom
+            *v1, *v5, *v6,  # Right
+            *v1, *v6, *v3,  # Right
+            *v0, *v4, *v7,  # Left
+            *v0, *v7, *v3  # Left
+        )
+
+    def _update_vertices(self) -> None:
+        self._vertex_list.position[:] = self._get_vertices()
+
+    @property
+    def width(self) -> float:
+        """Get/set width of the rectangle.
+
+        The new left and right of the rectangle will be set relative to
+        its :py:attr:`.anchor_x` value.
+        """
+        return self._width
+
+    @width.setter
+    def width(self, value: float) -> None:
+        self._width = value
+        self._update_vertices()
+
+    @property
+    def height(self) -> float:
+        """Get/set the height of the rectangle.
+
+        The bottom and top of the rectangle will be positioned relative
+        to its :py:attr:`.anchor_y` value.
+        """
+        return self._height
+
+    @height.setter
+    def height(self, value: float) -> None:
+        self._height = value
+        self._update_vertices()
+
+    def _update_translation(self) -> None:
+        """Overwrite this method to support 3d position"""
+        self._vertex_list.translation[:] = (
+            self._x, self._y, self._z) * self._num_verts
+
+    @property
+    def z(self) -> float:
+        return self._z
+
+    @z.setter
+    def z(self, value: float) -> None:
+        self._z = value
+        self._update_translation()

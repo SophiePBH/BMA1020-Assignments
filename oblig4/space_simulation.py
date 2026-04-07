@@ -49,6 +49,11 @@ glEnable(GL_DEPTH_TEST)
 
 FPS = 60
 
+# Global State
+# ------------
+# The global state ensures that the correct parameters and values are uploaded
+# to the shader/GPU. We update the state in the draw function.
+global_state = lib.GlobalState()
 
 # Gravity
 has_em_force = True
@@ -66,6 +71,7 @@ batch = pyglet.graphics.Batch()
 spheres_batch = pyglet.graphics.Batch()
 particles_batch = pyglet.graphics.Batch()
 widgets_batch = pyglet.graphics.Batch()
+world_batch = pyglet.graphics.Batch()
 
 # Particles
 particles = np.array([])
@@ -73,12 +79,15 @@ charge = np.array([-1, 1])
 spawnpoint = np.array([0, 0, 0])
 
 # Spaceship
-spaceship_model = lib.shapes.CustomModel(filepath="data/spaceship.obj",
-                                         x=0.0, y=0.0, z=0.0,
-                                         size=1)
+spaceship_model = lib.shapes.CustomModel(x=11, y=-9, z=0,
+                                         scale=1.0)
+
+# Lightsource
+point_light = lib.shapes.Sphere(x=-7, y=7, z=0, radius=1,
+                               color=(255,255,255,255), batch=batch)
 
 # The world grid helps us navigating the 3d world space
-world_grid = lib.shapes.WorldGrid(batch)
+world_grid = lib.shapes.WorldGrid(world_batch)
 
 # Widgets
 # -------
@@ -145,9 +154,9 @@ camera = lib.Camera(width=WIDTH, height=HEIGHT,
                     near=0.01, far=100.0)
 
 # Camera position
-camera.x = -8
-camera.y = 2
-camera.z = 8
+camera.x = 10.5
+camera.y = 0
+camera.z = 0
 
 # Input
 # -----
@@ -347,16 +356,22 @@ def on_mouse_drag(x: int, y: int, dx: int, dy: int, buttons: int, modifiers: int
 @window.event
 def on_draw():
     window.clear()
+
+    light_position = np.array([point_light.x, point_light.y, point_light.z])
+    # The global state needs the camera and the light position
+    global_state.update(camera.get_position(), light_position)
+
     widget_projection = window.projection
     widget_view = window.view
 
     window.projection = camera.get_projection()
     window.view = camera.get_look_at()
     
-    # spaceship_model.draw()
 
     particles_batch.draw()
+    spaceship_model.draw()
     batch.draw()
+    # world_batch.draw()
 
     window.projection = widget_projection
     window.view = widget_view
