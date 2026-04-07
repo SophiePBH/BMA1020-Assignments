@@ -1,34 +1,5 @@
 """
-
-
-MUST BE IN CORRECT DIRECTORY IN TERMINAL FOR SPACE SHIP TO LOAD PROPERLY!!!!!!!
-CD INTO \oblig4
-
-
-
-In this program, we simulate the space. We introduce stars, a planet and a
-spaceship to the simulation.
-
-Particles are now spheres. A class Sphere has been added to the library provided. ☑️
-
-Particles spawn from at least one point in Cartesian space.That means you can choose
-to create and emit the particles from multiple, defined Cartesian coordinates. ☑️
-
-Particles spawn with colors of your choice. Once an individual particle's
-color is set, it must persist throughout its lifetime. ☑️
-
-Particles spawn with a random velocity, radius, mass and charge. The charge can
-be taken to be either 1 or −1 at random, the others should take positive values
-within a range which gives visually satisfying results! ☑️
-
-Particles die after a certain amount of time, e.g. 3 seconds. ☑️
-
-Particles collide with each other with sphere-to-sphere collision. ☑️
-
-Allow the user to adjust the coefficient of restitution e, taking e=0.8 as a default. ☑️
-
-Particles are subject to mutual gravitational and electromagnetic forces.
-You should be able to toggle each force on/off with a keystroke. ☑️
+    TODO: Camera and ship movement
 """
 import numpy as np
 import pyglet
@@ -287,7 +258,6 @@ def on_update(delta: float):
 
     # TODO: Proper camera movement. Janky rn
     movement_step = np.pi/2 * delta *3
-
     # I think the key_handler is being overridden by on_key_press() 🤔
     if key_handler[key.W]:
         camera.y += movement_step
