@@ -260,34 +260,33 @@ def on_update(delta: float):
     # I think the key_handler is being overridden by on_key_press() 🤔
     if key_handler[key.A]:
         camera_position = np.array([camera.x, camera.y, camera.z])
-        new_position = rotate_y(camera_position, movement_step)
+        new_position = camera_position @ rotate_y(movement_step)
         camera.x = new_position[0]
         camera.z = new_position[2]
 
         spaceship_position = np.array([spaceship_model.x, spaceship_model.y, spaceship_model.z])
-        new_position = rotate_y(spaceship_position, movement_step)
+        new_position = spaceship_position @ rotate_y(movement_step)
         spaceship_model.x = new_position[0]
         spaceship_model.z = new_position[2]
         
     if key_handler[key.D]:
         camera_position = np.array([camera.x, camera.y, camera.z])
-        new_position = rotate_y(camera_position, -movement_step)
+        new_position = camera_position @ rotate_y(-movement_step)
         camera.x = new_position[0]
         camera.z = new_position[2]
 
         spaceship_position = np.array([spaceship_model.x, spaceship_model.y, spaceship_model.z])
-        new_position = rotate_y(spaceship_position, -movement_step)
+        new_position = spaceship_position @ rotate_y(-movement_step)
         spaceship_model.x = new_position[0]
         spaceship_model.z = new_position[2]
 
-def rotate_y(point, theta):
+def rotate_y(theta):
     rotate_y = np.array([
         [ np.cos(theta), 0, np.sin(theta)],
         [ 0, 1, 0],
         [-np.sin(theta), 0, np.cos(theta)],
     ])
-    new_position = point @ rotate_y
-    return new_position
+    return rotate_y
 
 def key_press(symbol, modifiers):
     global has_em_force
