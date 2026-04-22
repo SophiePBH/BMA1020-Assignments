@@ -4,6 +4,7 @@
 import numpy as np
 import pyglet
 from pyglet.window import key
+from pyglet.math import Vec3
 import lib
 from pyglet.gl import *
 import random
@@ -257,7 +258,6 @@ def on_update(delta: float):
             particle.lifetime -= 1
 
     movement_step = np.pi/2 * delta
-    # I think the key_handler is being overridden by on_key_press() 🤔
     if key_handler[key.A]:
         camera_position = np.array([camera.x, camera.y, camera.z])
         new_position = camera_position @ rotate_y(movement_step)
@@ -281,12 +281,11 @@ def on_update(delta: float):
         spaceship_model.z = new_position[2]
 
 def rotate_y(theta):
-    rotate_y = np.array([
+    return np.array([
         [ np.cos(theta), 0, np.sin(theta)],
         [ 0, 1, 0],
         [-np.sin(theta), 0, np.cos(theta)],
     ])
-    return rotate_y
 
 def key_press(symbol, modifiers):
     global has_em_force
