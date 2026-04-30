@@ -19,11 +19,6 @@ def grad3(hash, x, y, z):
     return ((u if(h & 1) == 0 else -u) +
             (v if(h & 2) == 0 else -v))
 
-p = np.arange(256, dtype=int)
-np.random.seed(0)
-np.random.shuffle(p)
-p = np.stack([p, p]).flatten()
-
 def _perlin_noise3(x: float,
                    y: float,
                    z: float,
@@ -37,6 +32,11 @@ def _perlin_noise3(x: float,
 
     # repeat x, y, og z = for 'seamless' transition (high number)
     # base = noise/seed -- can be 0
+
+    p = np.arange(256, dtype=int)
+    np.random.seed(0)
+    np.random.shuffle(p)
+    p = np.stack([p, p]).flatten()
 
     xi = int(x) & 255
     yi = int(y) & 255
