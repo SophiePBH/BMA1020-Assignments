@@ -11,6 +11,19 @@ import numpy as np
 import math
 from .linalg import *
 
+def grad3(hash, x, y, z):
+    h = hash & 15
+    u = x if h < 8 else y
+    v = y if h < 4 else (x if h in (12, 14) else z)
+
+    return ((u if(h & 1) == 0 else -u) +
+            (v if(h & 2) == 0 else -v))
+
+p = np.arange(256, dtype=int)
+np.random.seed(0)
+np.random.shuffle(p)
+p = np.stack([p, p]).flatten()
+
 def _perlin_noise3(x: float,
                    y: float,
                    z: float,
@@ -25,45 +38,40 @@ def _perlin_noise3(x: float,
     # repeat x, y, og z = for 'seamless' transition (high number)
     # base = noise/seed -- can be 0
 
-    i = math.floor(x, repeatx) # check what fmodf is in temp.c
-    j = math.floor(y, repeaty)
-    k = math.floor(z, repeatz)
-    ii = math.floor(i+1, repeatx)
-    jj = math.floor(j+1, repeaty)
-    kk = math.floor(k+1, repeatz)
+    xi = int(x) & 255
+    yi = int(y) & 255
+    zi = int(z) & 255
 
-    i = (i & 255) + base # check if '&' is correct in python
-    j = (j & 255) + base
-    k = (k & 255) + base
-    ii = (ii & 255) + base
-    jj = (jj & 255) + base
-    kk = (kk & 255) + base
+    xf = x - int(x)
+    yf = y - int(y)
+    zf = z - int(z)
 
-    x -= math.floor(x) # check floorf
-    y -= math.floor(y)
-    z -= math.floor(z)
-    fx = x**3 * (x*(x*6-15) + 10)
-    fy = y**3 * (y*(y*6-15) + 10)
-    fz = z**3 * (z*(z*6-15) + 10)
+    u = xf * xf * xf * (xf * (xf * 6 - 15) + 10)
+    v = yf * yf * yf * (yf * (yf * 6 - 15) + 10)
+    w = zf * zf * zf * (zf * (zf * 6 - 15) + 10)
 
-    """ Need Permutation table for rest (I think), also need to find out what 'grad3' is """
-    # A = PERM[i]
-	# AA = PERM[A + j]
-	# AB = PERM[A + jj]
-	# B = PERM[ii]
-	# BA = PERM[B + j]
-	# BB = PERM[B + jj]
+    aaa = p[p[p[xi] + yi] + zi]
+    aba = p[p[p[xi] + yi + 1] + zi]
+    aab = p[p[p[xi] + yi] + zi + 1]
+    abb = p[p[p[xi] + yi + 1] + zi + 1]
+    baa = p[p[p[xi + 1] + yi] + zi]
+    bba = p[p[p[xi + 1] + yi + 1] + zi]
+    bab = p[p[p[xi + 1] + yi] + zi +1]
+    bbb = p[p[p[xi + 1] + yi + 1] + zi + 1]
 
-    # return lerp(fz, lerp(fy, lerp(fx, grad3(PERM[AA + k], x, y, z),
-	# 								  grad3(PERM[BA + k], x - 1, y, z)),
-	# 						 lerp(fx, grad3(PERM[AB + k], x, y - 1, z),
-	# 								  grad3(PERM[BB + k], x - 1, y - 1, z))),
-	# 				lerp(fy, lerp(fx, grad3(PERM[AA + kk], x, y, z - 1),
-	# 								  grad3(PERM[BA + kk], x - 1, y, z - 1)),
-	# 						 lerp(fx, grad3(PERM[AB + kk], x, y - 1, z - 1),
-	# 								  grad3(PERM[BB + kk], x - 1, y - 1, z - 1))))
+    x1 = lerp(grad3(aaa, xf, yf, zf),
+              grad3(baa, xf - 1, yf, zf), u)
+    x2 = lerp(grad3(aba, xf, yf - 1, zf),
+              grad3(bba, xf -1, yf - 1, zf), u)
+    y1 = lerp(x1, x2, v)
 
-    return 0.0
+    x1 = lerp(grad3(aab, xf, yf, zf - 1),
+              grad3(bab, xf - 1, yf, zf -1), u)
+    x2 = lerp(grad3(abb, xf, yf - 1, zf - 1),
+              grad3(bbb, xf - 1, yf - 1, zf - 1), u)
+    y2 = lerp(x1, x2, v)
+
+    return (lerp(y1, y2, w) + 1) / 2
 
 
 def perlin(x: float,
@@ -99,25 +107,27 @@ def perlin(x: float,
 
     # Task 6b
     # Fractal brownian thingy
-    if(octaves == 1):
-        return _perlin_noise3(x, y, z, repeatx, repeaty, repeatz, base)
-    elif(octaves > 1):
-        frequency, amplitude = 1
-        max, total, i = 0
+    total = 0
+    frequency = 1
+    amplitude = 1
+    max_value = 0
 
-        for i in octaves:
-            total += _perlin_noise3(x*frequency, y*frequency, z*frequency,
-                                    repeatx*frequency, repeaty*frequency,
-                                    repeatz*frequency, base) * amplitude
-            max += amplitude
-            frequency *= lacunarity
-            amplitude *= persistence
-            i += 1
+    for _ in range(octaves):
+        total += _perlin_noise3(
+            x * frequency,
+            y * frequency,
+            z * frequency,
+            repeatx,
+            repeaty,
+            repeatz,
+            base
+        ) * amplitude
 
-        return total/max
+        max_value += amplitude
+        amplitude *= persistence
+        frequency *= lacunarity
 
-    else:
-        return 0.0
+    return total / max_value if max_value != 0 else 0
 
 if "__main__" == __name__:
     # Plot the noise
